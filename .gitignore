@@ -180,6 +180,8 @@ Desktop.ini
 $RECYCLE.BIN/
 src/.vs/
 
+# macOS Finder metadata
+.DS_Store
 
 # Log file
 *.txt

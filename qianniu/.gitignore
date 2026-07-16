@@ -1,0 +1,15 @@
+# 安装包/工具，体积大且可重新下载，不进仓库
+ndp48-devpack.exe
+nuget.exe
+
+# macOS 解压缩产生的垃圾目录
+__MACOSX/
+
+# Visual Studio 本地缓存
+.vs/
+
+# 运行时数据：真实的 API Key、聊天记录、图片缓存、临时文件，不应进仓库
+src/data/bot.db
+src/data/params.db
+src/data/imgcache/
+src/data/tmp/
