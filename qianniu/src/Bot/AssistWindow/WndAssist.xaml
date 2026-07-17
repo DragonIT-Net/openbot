@@ -14,18 +14,22 @@
 	Background="#00FFFFFF"
 	WindowStyle="None"
 	ShowActivated="False"
-	ShowInTaskbar="False">
+	ShowInTaskbar="False"
+	FontFamily="{StaticResource uiFontFamily}">
 	<Canvas
 		Name="canvas">
 		<Grid
 			Name="grdQnTab" />
         <Button
 			Name="btnShowRight"
-			Padding="5 0"
-			Margin="5 2"
-            Width="80"
-            Height="25"
-			Visibility="Collapsed"
+			Padding="10 3"
+			Margin="8 4"
+            Width="96"
+            Height="30"
+			Background="{StaticResource uiAccentBrush}"
+			BorderBrush="{StaticResource uiAccentBrush}"
+			Foreground="#FFFFFFFF"
+            Visibility="Collapsed"
 			ToolTip="显示右面板"
 			Click="btnShowRight_Click">显示右面板&gt;</Button>
         <ctlp:RightPanel

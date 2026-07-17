@@ -29,7 +29,7 @@ namespace Bot.Options
 		private void WndOption_Loaded(object sender, RoutedEventArgs e)
 		{
 			Style style = FindResource("tabLevel1") as Style;
-            CreateOpTab("AI大模型设置", new CtlRobotOptions(Seller), style);
+            CreateOpTab("基础设置", new CtlRobotOptions(Seller), style);
             sbSave.ToolTip = string.Format("保存成 {0} 个人设置", Seller);
 		}
 
@@ -167,11 +167,19 @@ namespace Bot.Options
 		private void Save(string seller)
 		{
 			Util.Assert(!string.IsNullOrEmpty(seller));
-			Hide();
+			var saved = true;
             TraversalOpsAndDoAction(op =>
             {
-                op.Save(seller);
+                if (!op.Save(seller))
+                {
+                    saved = false;
+                }
             });
+			if (!saved)
+			{
+				return;
+			}
+			Hide();
 			Close();
 		}
 

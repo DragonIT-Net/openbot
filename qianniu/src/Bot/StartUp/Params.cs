@@ -277,6 +277,14 @@ namespace Bot
             {
                 PersistentParams.TrySaveParam2Key("SystemPrompt", "ai", systemPrompt);
             }
+            public static string GetQianNiuInstallPath()
+            {
+                return PersistentParams.GetParam("QianNiuInstallPath", string.Empty);
+            }
+            public static void SetQianNiuInstallPath(string installPath)
+            {
+                PersistentParams.TrySaveParam("QianNiuInstallPath", installPath);
+            }
             public static OperationEnum GetOperation()
             {
                 return PersistentParams.GetParam2Key("Robot.Operation", "ai", OperationEnum.None);
@@ -290,7 +298,7 @@ namespace Bot
 
             public static bool GetIsAutoReply()
             {
-                return PersistentParams.GetParam<bool>("IsAutoReply", true);
+                return PersistentParams.GetParam<bool>("IsAutoReply", false);
             }
 
             public static void SetIsAutoReply(bool isAutoReply)

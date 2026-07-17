@@ -18,10 +18,15 @@ namespace Bot
     {
         public static void Init()
         {
+            Log.Info("[启动诊断] Init开始。");
             ClearTmpPathFiles();
+            Log.Info("[启动诊断] 临时目录清理完成。");
             DeskScanner.LoopScan();
+            Log.Info("[启动诊断] 千牛窗口扫描已启动。");
             MyWebSocketServer.WSocketSvrInst.Start();
+            Log.Info("[启动诊断] WebSocket服务启动流程已执行。");
             QNInject.StartInject();
+            Log.Info("[启动诊断] 千牛注入检查流程已触发。");
 
             //var script = File.ReadAllText(Path.Combine(AppContext.BaseDirectory,"inject.js"));
             //IseiyaHttpProxy.StartProxy(script);

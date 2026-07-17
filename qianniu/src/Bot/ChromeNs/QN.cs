@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using BotLib;
 using System.Diagnostics;
 using System.Threading;
+using System.Collections.Concurrent;
 using Bot.AssistWindow.Widget.Robot;
 using BotLib.Wpf.Extensions;
 using OpenAI.Chat;
@@ -30,6 +31,10 @@ namespace Bot.ChromeNs
         public event EventHandler<RecieveNewMessageEventArgs> EvRecieveNewMessage;
         public event EventHandler<ShopRobotReceriveNewMessageEventArgs> EvShopRobotReceriveNewMessage;
         public static HashSet<QN> QNSet { get; set; }
+        private static readonly ConcurrentDictionary<string, PendingAiReply> pendingAiReplies =
+            new ConcurrentDictionary<string, PendingAiReply>();
+        private static readonly ConcurrentDictionary<string, DateTime> processedIncomingMessages =
+            new ConcurrentDictionary<string, DateTime>();
         public string QnVersion { get; set; }
 
         private CDPClient cdp;
@@ -86,6 +91,116 @@ namespace Bot.ChromeNs
             this.rpa = new QNRpa(this);
         }
 
+        private static string BuildAiReplyKey(string sellerNick, string buyerNick)
+        {
+            return string.Format("{0}#{1}", sellerNick ?? string.Empty, buyerNick ?? string.Empty);
+        }
+
+        private static void CachePendingAiReply(string sellerNick, string buyerNick, string aiReply)
+        {
+            if (string.IsNullOrEmpty(sellerNick)
+                || string.IsNullOrEmpty(buyerNick)
+                || string.IsNullOrEmpty(aiReply)
+                || aiReply.StartsWith("错误："))
+            {
+                return;
+            }
+
+            pendingAiReplies[BuildAiReplyKey(sellerNick, buyerNick)] = new PendingAiReply
+            {
+                SellerNick = sellerNick,
+                BuyerNick = buyerNick,
+                AiReply = aiReply,
+                CreatedAt = DateTime.Now
+            };
+            CleanupPendingAiReplies();
+        }
+
+        private static bool TryConsumePendingAiReply(string sellerNick, string buyerNick, out PendingAiReply pending)
+        {
+            pending = null;
+            if (string.IsNullOrEmpty(sellerNick) || string.IsNullOrEmpty(buyerNick))
+            {
+                return false;
+            }
+            return pendingAiReplies.TryRemove(BuildAiReplyKey(sellerNick, buyerNick), out pending);
+        }
+
+        private static void CleanupPendingAiReplies()
+        {
+            var expiredAt = DateTime.Now.AddMinutes(-10);
+            foreach (var item in pendingAiReplies.ToArray())
+            {
+                if (item.Value == null || item.Value.CreatedAt < expiredAt)
+                {
+                    PendingAiReply removed;
+                    pendingAiReplies.TryRemove(item.Key, out removed);
+                }
+            }
+        }
+
+        private static string BuildIncomingMessageKey(string sellerNick, QNChatMessage message)
+        {
+            if (message == null)
+            {
+                return string.Empty;
+            }
+
+            var buyerNick = message.fromid == null ? string.Empty : message.fromid.nick;
+            var ccode = message.cid == null ? string.Empty : message.cid.ccode;
+            var clientId = message.mcode == null ? string.Empty : message.mcode.clientId;
+            var messageId = message.mcode == null ? string.Empty : message.mcode.messageId;
+            var text = message.originalData == null ? message.summary : (message.originalData.text ?? message.summary);
+            return string.Format("{0}#{1}#{2}#{3}#{4}#{5}#{6}",
+                sellerNick ?? string.Empty,
+                buyerNick,
+                ccode,
+                messageId,
+                clientId,
+                message.sendTime ?? string.Empty,
+                text ?? string.Empty);
+        }
+
+        private static bool TryMarkIncomingMessageProcessed(string sellerNick, QNChatMessage message)
+        {
+            var key = BuildIncomingMessageKey(sellerNick, message);
+            if (string.IsNullOrEmpty(key))
+            {
+                return true;
+            }
+
+            CleanupProcessedIncomingMessages();
+            return processedIncomingMessages.TryAdd(key, DateTime.Now);
+        }
+
+        private static void CleanupProcessedIncomingMessages()
+        {
+            var expiredAt = DateTime.Now.AddMinutes(-30);
+            foreach (var item in processedIncomingMessages.ToArray())
+            {
+                if (item.Value < expiredAt)
+                {
+                    DateTime removed;
+                    processedIncomingMessages.TryRemove(item.Key, out removed);
+                }
+            }
+        }
+
+        private static string GetShopName(string sellerName)
+        {
+            if (string.IsNullOrEmpty(sellerName))
+            {
+                return string.Empty;
+            }
+
+            var index = sellerName.IndexOf(':');
+            if (index < 0)
+            {
+                index = sellerName.IndexOf('：');
+            }
+            return index < 0 ? sellerName : sellerName.Substring(0, index);
+        }
+
 
         public async Task SendTextAsync(string buyer, string text)
         {
@@ -103,6 +218,25 @@ namespace Bot.ChromeNs
                 else
                 {
                     Log.Error("自动回复未初始化，取消本次发送。");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Exception(ex);
+            }
+        }
+
+        public async Task PrepareTextAsync(string buyer, string text)
+        {
+            try
+            {
+                if (rpa != null)
+                {
+                    await rpa.PrepareTextAsync(buyer, text);
+                }
+                else
+                {
+                    InsertText2Inputbox(buyer, text);
                 }
             }
             catch (Exception ex)
@@ -258,7 +392,60 @@ namespace Bot.ChromeNs
                         UserIdToText("To", m.toid),
                         UserIdToText("Login", m.loginid),
                         m.browserid));
+
+                    if (!isBuyerSend)
+                    {
+                        Log.Info(string.Format(
+                            "[发送回执候选] Buyer={0}, Seller={1}, Ccode={2}, ClientId={3}, MessageId={4}, SendTime={5}, Text={6}",
+                            m.toid == null ? string.Empty : m.toid.nick,
+                            m.fromid == null ? string.Empty : m.fromid.nick,
+                            ccode,
+                            clientId,
+                            messageId,
+                            m.sendTime,
+                            messageText));
+                        QueueAiReplyAnalysisIfNeeded(m, messageText);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Exception(ex);
+            }
+        }
+
+        private static void QueueAiReplyAnalysisIfNeeded(QNChatMessage message, string editedReply)
+        {
+            Task.Run(async () => await SubmitAiReplyAnalysisIfNeeded(message, editedReply));
+        }
+
+        private static async Task SubmitAiReplyAnalysisIfNeeded(QNChatMessage message, string editedReply)
+        {
+            try
+            {
+                if (message == null || message.fromid == null || message.toid == null)
+                {
+                    return;
+                }
+                if (string.IsNullOrEmpty(editedReply))
+                {
+                    return;
+                }
+
+                PendingAiReply pending;
+                if (!TryConsumePendingAiReply(message.fromid.nick, message.toid.nick, out pending))
+                {
+                    Log.Info(string.Format("AI回复分析未上报：未匹配到待上报AI回复，Seller={0}, Buyer={1}",
+                        message.fromid.nick,
+                        message.toid.nick));
+                    return;
+                }
+
+                var shopName = GetShopName(pending.SellerNick);
+                var csName = message.loginid == null || string.IsNullOrEmpty(message.loginid.display)
+                    ? pending.SellerNick
+                    : message.loginid.display;
+                await AiReplyAnalysisClient.SubmitAsync(shopName, csName, pending.BuyerNick, pending.AiReply, editedReply);
             }
             catch (Exception ex)
             {
@@ -307,6 +494,9 @@ namespace Bot.ChromeNs
         {
             try
             {
+                Log.Info(string.Format("[QN事件入口] receiveNewMsg, Buyer={0}, MessageLength={1}",
+                    e == null ? string.Empty : e.Buyer,
+                    e == null || e.Message == null ? 0 : e.Message.Length));
                 if (EvRecieveNewMessage != null)
                 {
                     EvRecieveNewMessage(this, e);
@@ -329,8 +519,21 @@ namespace Bot.ChromeNs
 
                     if (m.fromid.nick != _seller.Nick && m.toid.nick == _seller.Nick)
                     {
+                        if (!TryMarkIncomingMessageProcessed(_seller.Nick, m))
+                        {
+                            Log.Info(string.Format("[消息去重] 跳过重复买家消息，Seller={0}, Buyer={1}, ClientId={2}, MessageId={3}, SendTime={4}, Text={5}",
+                                _seller.Nick,
+                                m.fromid.nick,
+                                m.mcode == null ? string.Empty : m.mcode.clientId,
+                                m.mcode == null ? string.Empty : m.mcode.messageId,
+                                m.sendTime,
+                                m.summary));
+                            continue;
+                        }
+
                         var isAutoReply = Params.Robot.GetIsAutoReply();
-                        var answer = MyOpenAI.GetAnswer(m.toid.nick, m.fromid.nick, m.summary);
+                        var answer = await BetterYeahClient.GetAnswerAsync(this, m);
+                        CachePendingAiReply(_seller.Nick, m.fromid.nick, answer);
                         var desk = Desk.Inst;
                         if (desk != null)
                         {
@@ -345,6 +548,10 @@ namespace Bot.ChromeNs
                         {
                             await SendTextAsync(m.fromid.nick, answer);
                             await Task.Delay(2000);
+                        }
+                        else if (!isAutoReply && !string.IsNullOrEmpty(answer) && !answer.StartsWith("错误："))
+                        {
+                            await PrepareTextAsync(m.fromid.nick, answer);
                         }
                         else if (isAutoReply && !string.IsNullOrEmpty(answer) && answer.StartsWith("错误："))
                         {
@@ -527,5 +734,13 @@ namespace Bot.ChromeNs
             return res;
         }
 
+    }
+
+    public class PendingAiReply
+    {
+        public string SellerNick { get; set; }
+        public string BuyerNick { get; set; }
+        public string AiReply { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

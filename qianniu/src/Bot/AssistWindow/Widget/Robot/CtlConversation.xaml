@@ -4,23 +4,38 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Bot.AssistWindow.Widget.Robot"
-             mc:Ignorable="d">
-    <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Margin="0 0 0 2">
+             mc:Ignorable="d"
+             FontFamily="{StaticResource uiFontFamily}">
+    <Border
+        Background="{StaticResource uiSurfaceBrush}"
+        BorderBrush="{StaticResource uiBorderBrush}"
+        BorderThickness="1"
+        CornerRadius="{StaticResource uiRadiusMd}"
+        Margin="0 0 0 8"
+        Padding="6">
+        <Border.Effect>
+            <DropShadowEffect
+                BlurRadius="10"
+                Color="#9AA8BA"
+                Opacity="0.12"
+                ShadowDepth="1" />
+        </Border.Effect>
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="*" MinHeight="30"></RowDefinition>
-                <RowDefinition Height="*" MinHeight="30"></RowDefinition>
+                <RowDefinition Height="*" MinHeight="34"></RowDefinition>
+                <RowDefinition Height="*" MinHeight="34"></RowDefinition>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="30"/>
+                <ColumnDefinition Width="36"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Border Background="LightSkyBlue" CornerRadius="2" Margin="2"/>
-            <TextBlock Text="问:" VerticalAlignment="Center" HorizontalAlignment="Center" />
-            <TextBlock x:Name="txtQuestion" Text="你好" Padding="2" Grid.Column="1" FontWeight="Bold" TextWrapping="Wrap" VerticalAlignment="Center"/>
-            <Border Background="LightSkyBlue" Grid.Row="1"  CornerRadius="2" Margin="2"/>
-            <TextBlock Text="答:" Grid.Row="1" VerticalAlignment="Center"  HorizontalAlignment="Center" />
-            <TextBlock x:Name="txtAnswer" Text="您好，欢迎光临本店..." Padding="2" Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" 
+            <Border Background="{StaticResource uiQuestionBrush}" CornerRadius="{StaticResource uiRadiusSm}" Margin="0 0 6 4"/>
+            <TextBlock Text="问:" Foreground="{StaticResource uiAccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Center" />
+            <TextBlock x:Name="txtQuestion" Text="你好" Padding="4 0 2 4" Grid.Column="1" Foreground="{StaticResource uiTextBrush}" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
+            <Border Background="{StaticResource uiAnswerBrush}" Grid.Row="1" CornerRadius="{StaticResource uiRadiusSm}" Margin="0 4 6 0"/>
+            <TextBlock Text="答:" Grid.Row="1" Foreground="{StaticResource uiMutedTextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"  HorizontalAlignment="Center" />
+            <TextBlock x:Name="txtAnswer" Text="您好，欢迎光临本店..." Padding="4 4 2 0" Grid.Row="1" Grid.Column="1" Foreground="{StaticResource uiMutedTextBrush}" TextWrapping="Wrap" 
+                       Cursor="Hand"
                        MouseLeftButtonDown="txtAnswer_MouseLeftButtonDown"
                        VerticalAlignment="Center"/>
         </Grid>

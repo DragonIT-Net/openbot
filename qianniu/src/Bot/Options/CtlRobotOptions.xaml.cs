@@ -55,10 +55,7 @@ namespace Bot.Options
         {
             _seller = seller;
             _sellerMain = TbNickHelper.GetMainPart(seller);
-            txtBaseUrl.Text = Params.Robot.GetBaseUrl();
-            txtApiKey.Text = Params.Robot.GetApiKey();
-            txtModelName.Text = Params.Robot.GetModelName();
-            txtSystemPrompt.Text = Params.Robot.GetSystemPrompt();
+            txtQianNiuInstallPath.Text = Params.Robot.GetQianNiuInstallPath();
 
         }
 
@@ -69,18 +66,27 @@ namespace Bot.Options
 
         public void RestoreDefault()
         {
-            Params.Robot.SetBaseUrl(string.Empty);
-            Params.Robot.SetApiKey(string.Empty);
-            Params.Robot.SetModelName(string.Empty);
-            Params.Robot.SetSystemPrompt(string.Empty);
+            Params.Robot.SetQianNiuInstallPath(string.Empty);
+            txtQianNiuInstallPath.Text = string.Empty;
         }
 
-        public void Save(string seller)
+        public bool Save(string seller)
         {
-            Params.Robot.SetBaseUrl( txtBaseUrl.Text.Trim());
-            Params.Robot.SetApiKey( txtApiKey.Text.Trim());
-            Params.Robot.SetModelName(txtModelName.Text.Trim());
-            Params.Robot.SetSystemPrompt(txtSystemPrompt.Text.Trim());
+            var installPath = txtQianNiuInstallPath.Text.Trim();
+            if (!string.IsNullOrEmpty(installPath))
+            {
+                string resourcePath;
+                if (!QNInject.TryResolveResourcePath(installPath, out resourcePath))
+                {
+                    MsgBox.ShowErrDialog(
+                        "千牛安装目录无效，请填写千牛程序安装目录。\r\n\r\n需要能找到：Resources\\newWebui\\webui.zip\r\n\r\n当前填写：" + installPath,
+                        this);
+                    return false;
+                }
+            }
+
+            Params.Robot.SetQianNiuInstallPath(installPath);
+            return true;
         }
 
 

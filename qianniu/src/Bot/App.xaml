@@ -35,11 +35,71 @@
             <BitmapImage UriSource="Asset/Image/yellow.ico" x:Key="iconYellow" />
             <BitmapImage UriSource="Asset/Image/gray.ico" x:Key="iconGray" />
             <Style TargetType="{x:Type sb:SplitButton}" x:Key="{x:Type sb:SplitButton}">
-                <Setter Property="Padding" Value="20 5" />
+                <Setter Property="Padding" Value="16 6" />
             </Style>
+            <SolidColorBrush Color="#F6F8FB" x:Key="uiAppBrush" />
+            <SolidColorBrush Color="#FFFFFF" x:Key="uiSurfaceBrush" />
+            <SolidColorBrush Color="#EEF3F8" x:Key="uiSurfaceSoftBrush" />
+            <SolidColorBrush Color="#D8E3EE" x:Key="uiBorderBrush" />
+            <SolidColorBrush Color="#1E6BFF" x:Key="uiAccentBrush" />
+            <SolidColorBrush Color="#1357D7" x:Key="uiAccentHoverBrush" />
+            <SolidColorBrush Color="#E8F0FF" x:Key="uiAccentSoftBrush" />
+            <SolidColorBrush Color="#122033" x:Key="uiTextBrush" />
+            <SolidColorBrush Color="#5F6F86" x:Key="uiMutedTextBrush" />
+            <SolidColorBrush Color="#9AA8BA" x:Key="uiSubtleTextBrush" />
+            <SolidColorBrush Color="#E9EDF3" x:Key="uiDisabledBackgroundBrush" />
+            <SolidColorBrush Color="#C8D1DD" x:Key="uiDisabledBorderBrush" />
+            <SolidColorBrush Color="#8793A3" x:Key="uiDisabledForegroundBrush" />
+            <SolidColorBrush Color="#2B6FFF" x:Key="uiFocusRingBrush" />
+            <SolidColorBrush Color="#EEF5FF" x:Key="uiQuestionBrush" />
+            <SolidColorBrush Color="#F8FAFC" x:Key="uiAnswerBrush" />
+            <CornerRadius x:Key="uiRadiusSm">6</CornerRadius>
+            <CornerRadius x:Key="uiRadiusMd">8</CornerRadius>
+            <Thickness x:Key="uiButtonPadding">14 6</Thickness>
+            <FontFamily x:Key="uiFontFamily">Microsoft YaHei UI, Segoe UI</FontFamily>
             <Style TargetType="{x:Type Button}" x:Key="{x:Type Button}">
-                <Setter Property="Padding" Value="20 5" />
-                <Setter Property="Background" Value="#FFF0FFFF" />
+                <Setter Property="Padding" Value="{StaticResource uiButtonPadding}" />
+                <Setter Property="Background" Value="{StaticResource uiSurfaceBrush}" />
+                <Setter Property="BorderBrush" Value="{StaticResource uiBorderBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="Foreground" Value="{StaticResource uiTextBrush}" />
+                <Setter Property="FontFamily" Value="{StaticResource uiFontFamily}" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="MinHeight" Value="28" />
+                <Setter Property="SnapsToDevicePixels" Value="True" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Border
+                                x:Name="ButtonChrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="{StaticResource uiRadiusSm}">
+                                <ContentPresenter
+                                    Margin="{TemplateBinding Padding}"
+                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                    VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                    RecognizesAccessKey="True" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="ButtonChrome" Property="Background" Value="{StaticResource uiAccentSoftBrush}" />
+                                    <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="{StaticResource uiAccentBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="ButtonChrome" Property="Background" Value="{StaticResource uiAccentBrush}" />
+                                    <Setter Property="Foreground" Value="White" />
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="ButtonChrome" Property="Background" Value="{StaticResource uiDisabledBackgroundBrush}" />
+                                    <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="{StaticResource uiDisabledBorderBrush}" />
+                                    <Setter Property="Foreground" Value="{StaticResource uiDisabledForegroundBrush}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
             <ControlTemplate x:Key="tmplError">
                 <Border BorderBrush="#FFFF0000" BorderThickness="1">
@@ -206,15 +266,15 @@
                     </Trigger>
                 </Style.Triggers>
             </Style>
-            <SolidColorBrush Color="DeepSkyBlue" x:Key="scSkyBlueBrush" />
-            <SolidColorBrush Color="#ffffb0" x:Key="scLittleYellowBrush" />
-            <SolidColorBrush Color="White" x:Key="scWhiteBrush" />
-            <SolidColorBrush Color="GoldEnrod" x:Key="scGoldEnrodBrush" />
-            <SolidColorBrush Color="PaleGoldenrod" x:Key="scPaleGoldenrodBrush" />
-            <SolidColorBrush Color="LightYellow" x:Key="scLightYellowBrush" />
-            <SolidColorBrush Color="#EEE" x:Key="scDisabledBackgroundBrush" />
-            <SolidColorBrush Color="#AAA" x:Key="scDisabledBorderBrush" />
-            <SolidColorBrush Color="#888" x:Key="scDisabledForegroundBrush" />
+            <SolidColorBrush Color="#1E6BFF" x:Key="scSkyBlueBrush" />
+            <SolidColorBrush Color="#E8F0FF" x:Key="scLittleYellowBrush" />
+            <SolidColorBrush Color="#FFFFFF" x:Key="scWhiteBrush" />
+            <SolidColorBrush Color="#1E6BFF" x:Key="scGoldEnrodBrush" />
+            <SolidColorBrush Color="#E8F0FF" x:Key="scPaleGoldenrodBrush" />
+            <SolidColorBrush Color="#F8FAFC" x:Key="scLightYellowBrush" />
+            <SolidColorBrush Color="#E9EDF3" x:Key="scDisabledBackgroundBrush" />
+            <SolidColorBrush Color="#C8D1DD" x:Key="scDisabledBorderBrush" />
+            <SolidColorBrush Color="#8793A3" x:Key="scDisabledForegroundBrush" />
             <Style TargetType="{x:Type TabItem}" x:Key="tabLevel2">
                 <Setter
 					Property="Template">
@@ -224,9 +284,9 @@
                             <Grid>
                                 <Border
 									Name="Border"
-									Margin="0,0,-4,0"
+									Margin="0,0,4,0"
 									BorderThickness="1,1,1,1"
-									CornerRadius="4,4,0,0"
+									CornerRadius="6,6,0,0"
 									Background="{StaticResource scLightYellowBrush}"
 									BorderBrush="{StaticResource scGoldEnrodBrush}">
                                     <ContentPresenter
@@ -234,7 +294,7 @@
 										VerticalAlignment="Center"
 										HorizontalAlignment="Center"
 										ContentSource="Header"
-										Margin="15,3,15,3"
+										Margin="16,5,16,5"
 										RecognizesAccessKey="True" />
                                 </Border>
                             </Grid>
@@ -248,7 +308,7 @@
                                     <Setter
 										TargetName="Border"
 										Property="Background"
-										Value="{StaticResource scPaleGoldenrodBrush}" />
+										Value="{StaticResource uiAccentSoftBrush}" />
                                     <Setter
 										TargetName="Border"
 										Property="BorderThickness"
@@ -284,9 +344,9 @@
                             <Grid>
                                 <Border
 									Name="Border"
-									Margin="0,0,-4,0"
+									Margin="0,0,4,0"
 									BorderThickness="1,1,1,1"
-									CornerRadius="4,4,0,0"
+									CornerRadius="6,6,0,0"
 									Background="{StaticResource scWhiteBrush}"
 									BorderBrush="{StaticResource scSkyBlueBrush}">
                                     <ContentPresenter
@@ -294,7 +354,7 @@
 										VerticalAlignment="Center"
 										HorizontalAlignment="Center"
 										ContentSource="Header"
-										Margin="15,3,15,3"
+										Margin="16,5,16,5"
 										RecognizesAccessKey="True" />
                                 </Border>
                             </Grid>
@@ -308,7 +368,7 @@
                                     <Setter
 										TargetName="Border"
 										Property="Background"
-										Value="{StaticResource scLittleYellowBrush}" />
+										Value="{StaticResource uiAccentSoftBrush}" />
                                     <Setter
 										TargetName="Border"
 										Property="BorderThickness"

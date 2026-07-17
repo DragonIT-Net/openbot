@@ -5,26 +5,27 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:local="clr-namespace:Bot.AssistWindow.Widget"
-	Background="#FFFFFFFF">
+	Background="{StaticResource uiSurfaceBrush}"
+	FontFamily="{StaticResource uiFontFamily}">
 	<FrameworkElement.Resources>
 		<ResourceDictionary>
 			<SolidColorBrush
-				Color="DeepSkyBlue"
+				Color="#1E6BFF"
 				x:Key="rpSkyBlueBrush" />
 			<SolidColorBrush
-				Color="White"
+				Color="#FFFFFF"
 				x:Key="rpWhiteBrush" />
 			<SolidColorBrush
-				Color="DodgerBlue"
+				Color="#1E6BFF"
 				x:Key="rpDodgerBlueBrush" />
 			<SolidColorBrush
-				Color="#EEE"
+				Color="#E9EDF3"
 				x:Key="rpDisabledBackgroundBrush" />
 			<SolidColorBrush
-				Color="#AAA"
+				Color="#C8D1DD"
 				x:Key="rpDisabledBorderBrush" />
 			<SolidColorBrush
-				Color="#888"
+				Color="#8793A3"
 				x:Key="rpDisabledForegroundBrush" />
 			<Style
 				TargetType="{x:Type TabItem}"
@@ -37,16 +38,17 @@
 							<Grid>
 								<Border
 									Name="Border"
-									Margin="0,0,-4,0"
+									Margin="0,0,4,0"
 									BorderThickness="1,1,1,1"
-									Background="{StaticResource rpWhiteBrush}"
+									CornerRadius="6,6,0,0"
+									Background="{StaticResource uiSurfaceBrush}"
 									BorderBrush="{StaticResource rpSkyBlueBrush}">
 									<ContentPresenter
 										Name="ContentSite"
 										VerticalAlignment="Center"
 										HorizontalAlignment="Center"
 										ContentSource="Header"
-										Margin="10,5"
+										Margin="14,6"
 										RecognizesAccessKey="True" />
 								</Border>
 							</Grid>
@@ -61,6 +63,9 @@
 										TargetName="Border"
 										Property="Background"
 										Value="{StaticResource rpDodgerBlueBrush}" />
+									<Setter
+										Property="Foreground"
+										Value="White" />
 									<Setter
 										TargetName="Border"
 										Property="BorderThickness"
@@ -91,7 +96,7 @@
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition
-				Height="32" />
+				Height="38" />
 			<RowDefinition
 				Height="Auto" />
 			<RowDefinition
@@ -101,17 +106,19 @@
 			Grid.RowSpan="3"
 			HorizontalAlignment="Stretch"
 			VerticalAlignment="Stretch"
-			Fill="#FFFFFFFF"
-			Stroke="#FFD3D3D3"
+			Fill="{StaticResource uiSurfaceBrush}"
+			Stroke="{StaticResource uiBorderBrush}"
 			StrokeThickness="1">
 			<UIElement.Effect>
 				<DropShadowEffect
-					BlurRadius="5"
+					BlurRadius="18"
+					Color="#8AA0B6"
+					Opacity="0.22"
 					ShadowDepth="0" />
 			</UIElement.Effect>
 		</Rectangle>
         <Grid
-			Background="DodgerBlue">
+			Background="{StaticResource uiAccentBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
                 <ColumnDefinition
@@ -122,45 +129,56 @@
 					Width="auto" />
             </Grid.ColumnDefinitions>
             <StackPanel
-				Orientation="Horizontal">
+				Orientation="Horizontal"
+				Margin="8 0 0 0">
                 <Image
 					Source="{StaticResource iconYellow}"
-					Margin="5" 
+					Width="16"
+					Height="16"
+					Margin="0 0 8 0"
+					VerticalAlignment="Center"
                     />
                 <Label
 					Name="lblSeller"
 					VerticalAlignment="Center"
-					Foreground="#FFFFFFFF" />
+					Foreground="#FFFFFFFF"
+					FontSize="13"
+					FontWeight="SemiBold"
+					Padding="0" />
             </StackPanel>
             <Button
 				Name="btnOption"
 				Grid.Column="2"
-				Background="#00FFFFFF"
-				Foreground="#FFFFFFFF"
-				Margin="5 1"
-				Padding="5 3"
+				Background="#FFFFFFFF"
+				BorderBrush="#66FFFFFF"
+				Foreground="{StaticResource uiTextBrush}"
+				Margin="4 4 0 4"
+				Padding="10 3"
 				Click="btnOption_Click">设置</Button>
             <Button
 				Name="btnSyn"
 				Grid.Column="3"
-				Background="#00FFFFFF"
-				Foreground="#FFFFFFFF"
-				Margin="5 1"
-				Padding="5 3"
+				Background="#FFFFFFFF"
+				BorderBrush="#66FFFFFF"
+				Foreground="{StaticResource uiTextBrush}"
+				Margin="4 4 8 4"
+				Padding="10 3"
                 Click="btnHide_Click">隐藏</Button>
         </Grid>
         <Grid
 			Name="grdWaiting"
             Grid.Row="1"
-			Background="#FFFFFFFF"
+			Background="{StaticResource uiSurfaceBrush}"
 			Visibility="Collapsed">
             <ProgressBar
-				Height="4"
+				Height="3"
 				IsIndeterminate="True" />
         </Grid>
         <TabControl
 			Name="tabControl"
-			Grid.Row="2" />
+			Grid.Row="2"
+			Background="{StaticResource uiSurfaceBrush}"
+			BorderBrush="{StaticResource uiBorderBrush}" />
 		<Rectangle
 			Grid.RowSpan="3"
 			HorizontalAlignment="Right"

@@ -237,6 +237,8 @@
     <Compile Include="AssistWindow\Widget\Robot\CtlRobot.xaml.cs">
       <DependentUpon>CtlRobot.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ChromeNs\AiReplyAnalysisClient.cs" />
+    <Compile Include="ChromeNs\BetterYeahClient.cs" />
     <Compile Include="ChromeNs\MyOpenAI.cs" />
     <Compile Include="ChromeNs\QN.cs" />
     <Compile Include="ChatRecord\ChatDialog.cs" />
@@ -395,6 +397,9 @@
   <ItemGroup>
     <None Include="App.config">
       <SubType>Designer</SubType>
+    </None>
+    <None Include="inject.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config">
       <SubType>Designer</SubType>

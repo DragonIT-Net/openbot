@@ -5,33 +5,99 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:local="clr-namespace:Bot.AssistWindow.Widget.Robot"
-	MinWidth="270">
-    <Grid Margin="0">
+	MinWidth="270"
+	Background="{StaticResource uiSurfaceBrush}"
+	FontFamily="{StaticResource uiFontFamily}">
+    <UserControl.Resources>
+        <Style x:Key="AutoReplySwitchStyle" TargetType="{x:Type CheckBox}">
+            <Setter Property="Foreground" Value="#EEF5FF" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type CheckBox}">
+                        <Border
+                            x:Name="SwitchRoot"
+                            Background="Transparent"
+                            CornerRadius="12"
+                            Padding="4 3">
+                            <StackPanel Orientation="Horizontal">
+                                <ContentPresenter
+                                    VerticalAlignment="Center"
+                                    Margin="0 0 6 0"
+                                    RecognizesAccessKey="True" />
+                                <TextBlock
+                                    x:Name="StatusText"
+                                    Text="关闭"
+                                    Foreground="#C8DAFF"
+                                    FontWeight="Normal"
+                                    VerticalAlignment="Center"
+                                    Margin="0 0 7 0" />
+                                <Grid Width="26" Height="14" VerticalAlignment="Center">
+                                    <Border
+                                        x:Name="SwitchTrack"
+                                        Background="#55FFFFFF"
+                                        CornerRadius="7" />
+                                    <Ellipse
+                                        x:Name="SwitchThumb"
+                                        Width="10"
+                                        Height="10"
+                                        Margin="2 0 0 0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Fill="#EAF1FF" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="SwitchRoot" Property="Background" Value="#18FFFFFF" />
+                                <Setter TargetName="SwitchTrack" Property="Background" Value="#77FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="StatusText" Property="Text" Value="开启" />
+                                <Setter TargetName="StatusText" Property="Foreground" Value="#FFFFFFFF" />
+                                <Setter TargetName="SwitchTrack" Property="Background" Value="#FFFFFFFF" />
+                                <Setter TargetName="SwitchThumb" Property="HorizontalAlignment" Value="Right" />
+                                <Setter TargetName="SwitchThumb" Property="Margin" Value="0 0 2 0" />
+                                <Setter TargetName="SwitchThumb" Property="Fill" Value="{StaticResource uiAccentBrush}" />
+                                <Setter Property="Foreground" Value="#FFFFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="SwitchRoot" Property="Opacity" Value="0.55" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    <Grid Margin="0" Background="{StaticResource uiSurfaceBrush}">
         <Grid.RowDefinitions>
-            <!-- 商品信息 -->
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="35"/>
-            <!-- 聊天内容 -->
+            <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="92"/>
         </Grid.RowDefinitions>       
 
-        <!-- 商品信息 -->
-        <Grid>
+        <Grid Visibility="Collapsed">
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"></RowDefinition>
             </Grid.RowDefinitions>
             <StackPanel x:Name="panelGoods">
                 <ProgressBar x:Name="pgDownGoods"
-					    Height="5"
-					    Margin="2"
+					    Height="3"
+					    Margin="8 6"
                         Visibility="Collapsed"
 					    IsIndeterminate="True" />
             </StackPanel>
         </Grid>
 
-        <Grid Background="DeepSkyBlue" Grid.Row="1" Margin="0 0 0 5">
+        <Grid Background="{StaticResource uiAccentBrush}" Grid.Row="1" Margin="8 8 8 6">
             <Grid.RowDefinitions>
-                <RowDefinition Height="30"/>
+                <RowDefinition Height="32"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" />
@@ -39,34 +105,34 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock Margin="5 0 0 0"  Text="正在接待" Foreground="#FFFFFFFF" VerticalAlignment="Center"></TextBlock>
-            <TextBlock Margin="5 0 0 0" x:Name="txtBuyer" Text="..." Grid.Column="1"
-                Foreground="Yellow" FontWeight="Bold" FontSize="13"
+            <TextBlock Margin="10 0 0 0"  Text="正在接待" Foreground="#FFFFFFFF" FontSize="12" VerticalAlignment="Center"></TextBlock>
+            <TextBlock Margin="6 0 0 0" x:Name="txtBuyer" Text="..." Grid.Column="1"
+                Foreground="#FFFFFFFF" FontWeight="Bold" FontSize="13"
                 VerticalAlignment="Center"></TextBlock>
             <CheckBox
                 Name="cboxAuto"
                 Grid.Column="3"
-                Margin="2 0 5 0"
+                Margin="8 0 8 0"
                 ToolTip="自动切换到发送消息的客户，并将答案【直接发送】给顾客"
                 Foreground="#FFFFFFFF"
+                Style="{StaticResource AutoReplySwitchStyle}"
                 VerticalAlignment="Center"
                 Click="cboxAuto_Click">自动回复</CheckBox>
         </Grid>
-        <!-- 聊天内容 -->
-        <ScrollViewer x:Name="scvBody" Grid.Row="2" Margin="0">
-            <StackPanel x:Name="stkDialog">
+        <ScrollViewer x:Name="scvBody" Grid.Row="2" Margin="0" Background="{StaticResource uiSurfaceSoftBrush}">
+            <StackPanel x:Name="stkDialog" Margin="8 2 8 8">
                 <Grid
                     Name="grdShowConv"
                     Row="1"
-                    Background="#FFFFFFFF"
+                    Background="{StaticResource uiSurfaceSoftBrush}"
                     Visibility="Collapsed">
                     <ProgressBar
-				        Height="20"
+				        Height="14"
 				        Margin="20"
 				        IsIndeterminate="True" />
                 </Grid>
-                <Grid Name="grdTipNoConv" Background="#FFFFFFFF" Height="200" Visibility="Collapsed">
-                    <TextBlock  HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20" Text="暂无聊天内容" />
+                <Grid Name="grdTipNoConv" Background="{StaticResource uiSurfaceSoftBrush}" Height="200" Visibility="Collapsed">
+                    <TextBlock  HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="{StaticResource uiMutedTextBrush}" Text="暂无聊天内容" />
                 </Grid>
                 <!--<Grid>
                     <Grid.RowDefinitions>
@@ -105,5 +171,30 @@
                 --><!-- 更多消息... -->
             </StackPanel>
         </ScrollViewer>
+        <Border
+            Grid.Row="3"
+            Margin="8 0 8 8"
+            Background="{StaticResource uiSurfaceBrush}"
+            BorderBrush="{StaticResource uiBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource uiRadiusMd}">
+            <Grid Margin="10 8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock
+                    Text="模型问答"
+                    Foreground="{StaticResource uiTextBrush}"
+                    FontWeight="SemiBold"
+                    FontSize="12" />
+                <TextBlock
+                    Grid.Row="1"
+                    Margin="0 8 0 0"
+                    Text="预留流式问答区域"
+                    Foreground="{StaticResource uiSubtleTextBrush}"
+                    TextWrapping="Wrap" />
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

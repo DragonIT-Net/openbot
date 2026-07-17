@@ -25,6 +25,12 @@ namespace Bot.AssistWindow.NotifyIcon.MenuCreator
 
         public static void Create(CtlNotifyIcon ctlNotifyIcon, string nick)
         {
+            ctlNotifyIcon.RemoveDuplicateItems(nick);
+            if (ctlNotifyIcon.HasItem(nick))
+            {
+                return;
+            }
+
             var it = ctlNotifyIcon.CreateItem(nick, null, null, true, nick);
             ctlNotifyIcon.InsertItem(2, it);
         }

@@ -11,6 +11,7 @@ using System.Windows.Documents;
 using System.Windows.Markup;
 using Bot.Automation.ChatDeskNs;
 using DbEntity;
+using BotLib;
 using BotLib.Db.Sqlite;
 using BotLib.Wpf.Extensions;
 using System.Security.Cryptography;
@@ -130,27 +131,30 @@ namespace Bot.AssistWindow.Widget.Robot
 
         private async void RefreshItems()
         {
-            pgDownGoods.Visibility = Visibility.Visible;
+            pgDownGoods.Visibility = Visibility.Collapsed;
             RemoveCtlGoods();
-            //咨询的商品
             var itemRecord = await _preQN.GetItemRecords(_preQN.Buyer.TargetId);
-            if (itemRecord.data == null || itemRecord.data.underInquiryItemList == null)
+            if (itemRecord == null || itemRecord.data == null)
             {
-                pgDownGoods.Visibility = Visibility.Collapsed;
+                Log.Info(string.Format("[商品记录] Buyer={0}, 未返回商品记录。", _preQN.Buyer.Nick));
             }
             else
             {
-                var inquiryItems = itemRecord.data.underInquiryItemList;
-                if (inquiryItems != null && inquiryItems.Count > 0)
-                {
-                    foreach (var item in inquiryItems)
-                    {
-                        var ctlGoods = new CtlOneGoods(item);
-                        panelGoods.Children.Add(ctlGoods);
-                    }
-                }
-                pgDownGoods.Visibility = Visibility.Collapsed;
+                LogItemIds("咨询宝贝", itemRecord.data.underInquiryItemList);
+                LogItemIds("足迹", itemRecord.data.footPointItemList);
+                LogItemIds("最近购买", itemRecord.data.recentlyBoughtItemList);
             }
+        }
+
+        private void LogItemIds(string source, List<ZnkfItem> items)
+        {
+            var ids = items == null
+                ? new List<long>()
+                : items.Where(item => item != null && item.itemId > 0).Select(item => item.itemId).Distinct().ToList();
+            Log.Info(string.Format("[商品记录] Buyer={0}, 来源={1}, 商品ID={2}",
+                _preQN.Buyer.Nick,
+                source,
+                ids.Count < 1 ? "<empty>" : string.Join(",", ids)));
         }
 
         private void RemoveCtlGoods()

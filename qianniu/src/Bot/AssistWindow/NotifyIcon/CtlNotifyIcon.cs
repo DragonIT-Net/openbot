@@ -175,6 +175,11 @@ namespace Bot.AssistWindow.NotifyIcon
             NotifyIconInner.ContextMenuStrip.Items.Insert(idx, toolStripItem);
         }
 
+        public bool HasItem(string nick)
+        {
+            return GetFirstLevelItemIndexByTagText(nick) >= 0;
+        }
+
         public ToolStripMenuItem GetRootMenu(int idx)
         {
             return NotifyIconInner.ContextMenuStrip.Items[idx] as ToolStripMenuItem;
@@ -195,6 +200,30 @@ namespace Bot.AssistWindow.NotifyIcon
                 {
                     NotifyIconInner.ContextMenuStrip.Items.RemoveAt(idx);
                 });
+            }
+        }
+
+        public void RemoveDuplicateItems(string nick)
+        {
+            if (NotifyIconInner == null || NotifyIconInner.ContextMenuStrip == null
+                || NotifyIconInner.ContextMenuStrip.Items == null)
+                return;
+
+            var seen = false;
+            for (var i = NotifyIconInner.ContextMenuStrip.Items.Count - 1; i >= 0; i--)
+            {
+                if (NotifyIconInner.ContextMenuStrip.Items[i].Tag as string != nick)
+                {
+                    continue;
+                }
+
+                if (!seen)
+                {
+                    seen = true;
+                    continue;
+                }
+
+                NotifyIconInner.ContextMenuStrip.Items.RemoveAt(i);
             }
         }
 

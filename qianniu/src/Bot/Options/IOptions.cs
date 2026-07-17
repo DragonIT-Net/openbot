@@ -8,7 +8,7 @@ namespace Bot.Options
 {
     public interface IOptions
     {
-        void Save(string seller);
+        bool Save(string seller);
         void RestoreDefault();
         void NavHelp();
         OptionEnum OptionType { get; }
