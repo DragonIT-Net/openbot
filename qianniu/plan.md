@@ -2,66 +2,40 @@
 
 ## 0. 需求
 
-调整"千牛智能辅助"这个 WPF 桌面程序的所有前端页面（共 16 个 XAML 窗口/控件）的视觉样式，**不改变任何业务逻辑**。风格方向：现代简约风。具体问题不明确，按"全面翻新"处理。分两批推进：先做 1-2 个核心页面确认风格，再铺开到剩余页面。
+调整"千牛智能辅助"这个 WPF 桌面程序的所有前端页面（共 16 个 XAML 窗口/控件）的视觉样式，**不改变任何业务逻辑**。
 
-设计参考已安装 `design-taste-frontend` skill（GitHub: Leonxlnx/taste-skill）。**如实说明**：这个 skill 面向的是网页营销页/落地页/作品集（React + Tailwind + Next.js + GSAP），并且它自己在"Out of Scope"里明确排除了 dashboard / 密集型产品 UI。本项目是 WPF 桌面客服工作台（多 Tab、多信息密度），技术栈也完全不同（XAML，无 Tailwind/GSAP/React 可用）。所以本次**不会照搬**它的具体代码套路，只借用其中语言无关的"设计品味"原则，翻译成 WPF 对应做法：
+引入 [HandyControl](https://github.com/HandyOrg/HandyControl) 作为色板/资源来源。决策过程、澄清过的误解和最终取舍见 [docs/adr/0001-handycontrol-as-ui-foundation.md](docs/adr/0001-handycontrol-as-ui-foundation.md)。
 
-| Skill 原则 | WPF 落地方式 |
-|---|---|
-| 一个页面一个强调色（Color Consistency Lock） | 全局只定义 1 个 Accent Brush，替换现有蓝+黄两套配色 |
-| 圆角/阴影一致性（Shape Consistency Lock） | 统一 CornerRadius 档位、统一柔和阴影（色调贴合背景，非纯黑） |
-| 排版层级（Typography） | 统一字号/字重资源（标题、正文、次要文字三档） |
-| 间距节奏 | 统一 4px 基准间距（4/8/12/16/24） |
-| 交互状态完整（Loading/Disabled/Hover） | 复用现有 grdWaiting、Disabled 系列 Brush，只重新配色不改行为 |
-| 审计先行、改版分级（Redesign Protocol §11） | 见下方"现状审计"，采用 "Redesign - Preserve"：只做视觉现代化，不动 IA/交互 |
+## 1. 已完成（本轮）
 
-## 1. 现状审计（Redesign - Preserve 模式）
+- `Bot/packages.config` + `Bot.csproj` 加入 `HandyControl` 3.5.1 依赖。
+- [App.xaml](src/Bot/App.xaml)：合并 HandyControl 的 `SkinDefault.xaml` + `Theme.xaml`；已有的 `uiXxx`/`scXxx` 画刷改为引用 HandyControl 色板（`PrimaryColor`/`BorderColor`/`RegionColor`/`PrimaryTextColor` 等），保留原有的隐式 `Button` 样式和 `tabLevel1`/`tabLevel2` 模板结构不变。
+- [RightPanel.xaml](src/Bot/AssistWindow/Widget/RightPanel.xaml)：本地的 `rpSkyBlueBrush`/`rpWhiteBrush`/`rpDodgerBlueBrush` 同样改为引用 HandyControl 色板。
+- `WndAssist.xaml`、`CtlConversation.xaml`、`CtlRobot.xaml`、`CtlRobotOptions.xaml` 等已经引用 `uiXxx` 资源键的文件**未做改动**，颜色会随 `App.xaml` 里资源定义的变化自动联动。
 
-- **配色不统一**：`App.xaml` 全局定义了 `tabLevel1`(蓝系)/`tabLevel2`(黄系) 两套 TabItem 样式，`RightPanel.xaml` 又自己定义了第三套 `tabRightPanel`(蓝系)。按钮默认全局样式是浅青色 `#FFF0FFFF`。三套配色并存。
-- **圆角**：`tabLevel1/2` 有 4px 圆角，`tabRightPanel` 和大部分 Border/Rectangle 是直角，不统一。
-- **阴影**：仅 `RightPanel` 外框用了默认 `DropShadowEffect`（纯黑阴影，未调色）。
-- **间距**：Margin/Padding 数值随意（`5 1`、`5 3`、`10 5` 等），无统一节奏。
-- **排版**：未显式设置字体/字号，全部走系统默认。
-- **现有 Dial 估读**：VARIANCE 低（布局是标准系统控件堆叠）、MOTION 0（无动画/过渡）、DENSITY 中高（工作台类）。
+## 2. 现状审计（仍然有效的背景信息）
+
 - **必须原样保留（不能碰）**：
   - 所有 `x:Name`（`.xaml.cs` 里通过这些名字操作控件，如 `grdQnTab`、`ctlRightPanel`、`tabControl`、`grdWaiting`、`lblSeller` 等）。
   - 所有 `Click`/`MouseLeftButtonDown` 等事件绑定的方法名。
   - `Grid.Row/Column`、`TabControl` 的数据绑定结构、窗口的 `AllowsTransparency`/`WindowStyle`/`ShowInTaskbar` 等行为属性。
   - 三个拖拽热区 `Rectangle`（`rectWiden`/`rectHighden`/`rectCorner`）的 Cursor 和事件不变。
+  - `tabLevel1`（[WndOption.xaml.cs](src/Bot/Options/WndOption.xaml.cs)）、`tabRightPanel`（[RightPanel.xaml.cs](src/Bot/AssistWindow/Widget/RightPanel.xaml.cs)）这两个资源键名被 `.cs` 代码通过 `FindResource("键名")` 按字符串查找，键名本身不能改，只改了键对应的内容。
 
-## 2. 设计方案
+## 3. 已知风险 / 待 Windows 验证的点
 
-- 新建一个统一的设计资源字典（挂在 `App.xaml` 的 `Application.Resources` 里，或拆成单独文件用 `MergedDictionaries` 引入），包含：
-  - **色板**：1 个主强调色（替换现有蓝/黄双色系），中性灰阶（背景/边框/次要文字/禁用态），语义色沿用现有 Disabled 三件套（`#EEE`/`#AAA`/`#888`）。
-  - **圆角档位**：统一走"轻圆角"（如 6px），替换现有直角 Border/Rectangle 和 4px 的 TabItem。
-  - **阴影**：柔和阴影（低透明度、贴合背景色调），替换 `RightPanel` 现有纯默认阴影。
-  - **间距资源**：常用 Margin/Padding 数值统一到 4px 基准倍数。
-  - **字体层级**：标题/正文/次要文字三档字号 + 颜色。
-  - **统一 Button/TabItem 样式**：替换掉全局 `tabLevel1`/`tabLevel2`/`tabRightPanel` 三套模板为一套，`btnOption`/`btnSyn` 这类工具栏按钮改为 ghost 风格（不用纯色块）。
-- 只改 XAML 里的外观属性（Background/BorderBrush/BorderThickness/CornerRadius/Margin/Padding/FontSize/FontFamily/Effect/Foreground），不改结构、不改 `.xaml.cs`。
-
-## 3. 推进步骤
-
-**第一批（本次先做，确认风格后再继续）：**
-1. 在 `App.xaml` 里整理出统一设计资源（色板/圆角/阴影/间距/字体/Button 与 TabItem 样式），替换掉现有杂乱的 `tabLevel1`/`tabLevel2`/`scXxxBrush` 等。
-2. [WndAssist.xaml](src/Bot/AssistWindow/WndAssist.xaml) — 主悬浮窗，主要是 `btnShowRight` 按钮套用新样式。
-3. [RightPanel.xaml](src/Bot/AssistWindow/Widget/RightPanel.xaml) — 右侧面板：标题栏配色、`btnOption`/`btnSyn` 按钮样式、`tabRightPanel` 样式、外框阴影、加载条，全部套新设计资源。
-
-**第二批（第一批确认后再推进，复用同一套设计资源）：**
-- 机器人对话组件：`CtlRobot`、`CtlConversation`、`CtlImage`、`CtlOneGoods`
-- 设置窗口：`WndOption`、`CtlRobotOptions`
-- 托盘：`WndNotifyIcon`
-- 通用弹窗：`WndInput`、`WndLoading`、`WndMsgBox`、`WndNoodles`、`WndNotTipAgain`、`WndRedBull`、`WndTrayTip`
-- 表情选择器：`WndEmojiInputer`
+- HandyControl 的全局隐式 `Window` 样式会对所有窗口生效；`WndAssist` 已显式设置 `WindowStyle="None"`/`AllowsTransparency="True"`，本地属性优先级更高，预期不受影响；其余没有显式设置窗口样式的窗口（`WndOption`、各种 `Wnd*` 弹窗）外观可能会跟着变，需要逐个打开看一眼。
+- `ExpandCollapseToggleStyle`、`TreeArrow` 这两个资源键名跟 HandyControl 内部同名，但因为是直接声明在 `Application.Resources`（不在 MergedDictionaries 里），按 WPF 规则会继续优先生效，TreeView 展开箭头预期行为不变，但建议实际打开一个用到 TreeView 的界面确认一下。
+- HandyControl 的 `Window` 样式可能引入默认的最小化/最大化/关闭按钮样式或窗口圆角，需确认跟现有窗口的自定义标题栏/拖拽逻辑（如果有）不冲突。
 
 ## 4. 验证方式（重要限制）
 
-当前开发环境是 macOS，无法编译/运行这个 .NET Framework 4.8 WPF 项目。我只能做到：
-- 静态检查 XAML 语法正确性、`StaticResource`/`DynamicResource` 的 key 是否都存在、命名空间引用是否正确。
-- 无法实际渲染截图确认效果。
+当前开发环境是 macOS，无法编译/运行这个 .NET Framework 4.8 WPF 项目。已完成的检查：
+- 静态检查了 XAML 语法、`StaticResource`/`DynamicResource` 引用的 key 是否都存在（含手动核对 HandyControl 源码确认 `PrimaryColor`/`BorderColor` 等色值资源键名和 `ExpandCollapseToggleStyle`/`TreeArrow` 的键名冲突不影响功能）。
+- 无法实际渲染截图确认视觉效果，也无法验证 NuGet 包能否正常还原、能否编译通过。
 
-**需要你在 Windows 上用 Visual Studio 编译运行后实际看一下效果**，如有偏差我再继续调整。
+**需要你在 Windows 上用 Visual Studio 打开解决方案、还原 NuGet 包、编译运行，重点看一下第 3 节列的几个风险点。**
 
-## 5. 待确认
+## 5. 后续（未做，视效果决定要不要继续）
 
-- 主强调色具体选哪个颜色（比如沿用现有天蓝系柔化一版，还是换成别的），我会先给一版方案，你可以再调整。
+如果这次颜色统一后效果不够"现代"，可以再往下走：给圆角、间距、阴影做进一步调整，或者针对个别弹窗（`WndMsgBox`/`WndTrayTip` 等）引入 HandyControl 自带的 Growl/Dialog 控件替代手搓窗口——但这两者都是尚未讨论细节的新范围，需要另外过一轮。

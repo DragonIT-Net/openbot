@@ -3,9 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Bot" 
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-             xmlns:sb="clr-namespace:Delay;assembly=SplitButtonWpf">
+             xmlns:sb="clr-namespace:Delay;assembly=SplitButtonWpf"
+             xmlns:hc="https://handyorg.github.io/handycontrol">
     <Application.Resources>
         <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/SkinDefault.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
             <BitmapImage UriSource="Asset/Image/plus.png" x:Key="imgPlus" />
             <BitmapImage UriSource="Asset/Image/splash.gif" x:Key="imgSplash" />
             <BitmapImage UriSource="Asset/Image/redbull.png" x:Key="imgRedbull" />
@@ -37,20 +42,20 @@
             <Style TargetType="{x:Type sb:SplitButton}" x:Key="{x:Type sb:SplitButton}">
                 <Setter Property="Padding" Value="16 6" />
             </Style>
-            <SolidColorBrush Color="#F6F8FB" x:Key="uiAppBrush" />
-            <SolidColorBrush Color="#FFFFFF" x:Key="uiSurfaceBrush" />
-            <SolidColorBrush Color="#EEF3F8" x:Key="uiSurfaceSoftBrush" />
-            <SolidColorBrush Color="#D8E3EE" x:Key="uiBorderBrush" />
-            <SolidColorBrush Color="#1E6BFF" x:Key="uiAccentBrush" />
-            <SolidColorBrush Color="#1357D7" x:Key="uiAccentHoverBrush" />
-            <SolidColorBrush Color="#E8F0FF" x:Key="uiAccentSoftBrush" />
-            <SolidColorBrush Color="#122033" x:Key="uiTextBrush" />
-            <SolidColorBrush Color="#5F6F86" x:Key="uiMutedTextBrush" />
-            <SolidColorBrush Color="#9AA8BA" x:Key="uiSubtleTextBrush" />
+            <SolidColorBrush Color="{DynamicResource BackgroundColor}" x:Key="uiAppBrush" />
+            <SolidColorBrush Color="{DynamicResource RegionColor}" x:Key="uiSurfaceBrush" />
+            <SolidColorBrush Color="{DynamicResource SecondaryRegionColor}" x:Key="uiSurfaceSoftBrush" />
+            <SolidColorBrush Color="{DynamicResource BorderColor}" x:Key="uiBorderBrush" />
+            <SolidColorBrush Color="{DynamicResource PrimaryColor}" x:Key="uiAccentBrush" />
+            <SolidColorBrush Color="{DynamicResource DarkPrimaryColor}" x:Key="uiAccentHoverBrush" />
+            <SolidColorBrush Color="{DynamicResource LightPrimaryColor}" x:Key="uiAccentSoftBrush" />
+            <SolidColorBrush Color="{DynamicResource PrimaryTextColor}" x:Key="uiTextBrush" />
+            <SolidColorBrush Color="{DynamicResource SecondaryTextColor}" x:Key="uiMutedTextBrush" />
+            <SolidColorBrush Color="{DynamicResource ThirdlyTextColor}" x:Key="uiSubtleTextBrush" />
             <SolidColorBrush Color="#E9EDF3" x:Key="uiDisabledBackgroundBrush" />
             <SolidColorBrush Color="#C8D1DD" x:Key="uiDisabledBorderBrush" />
             <SolidColorBrush Color="#8793A3" x:Key="uiDisabledForegroundBrush" />
-            <SolidColorBrush Color="#2B6FFF" x:Key="uiFocusRingBrush" />
+            <SolidColorBrush Color="{DynamicResource PrimaryColor}" x:Key="uiFocusRingBrush" />
             <SolidColorBrush Color="#EEF5FF" x:Key="uiQuestionBrush" />
             <SolidColorBrush Color="#F8FAFC" x:Key="uiAnswerBrush" />
             <CornerRadius x:Key="uiRadiusSm">6</CornerRadius>
@@ -266,12 +271,12 @@
                     </Trigger>
                 </Style.Triggers>
             </Style>
-            <SolidColorBrush Color="#1E6BFF" x:Key="scSkyBlueBrush" />
-            <SolidColorBrush Color="#E8F0FF" x:Key="scLittleYellowBrush" />
-            <SolidColorBrush Color="#FFFFFF" x:Key="scWhiteBrush" />
-            <SolidColorBrush Color="#1E6BFF" x:Key="scGoldEnrodBrush" />
-            <SolidColorBrush Color="#E8F0FF" x:Key="scPaleGoldenrodBrush" />
-            <SolidColorBrush Color="#F8FAFC" x:Key="scLightYellowBrush" />
+            <SolidColorBrush Color="{DynamicResource PrimaryColor}" x:Key="scSkyBlueBrush" />
+            <SolidColorBrush Color="{DynamicResource LightPrimaryColor}" x:Key="scLittleYellowBrush" />
+            <SolidColorBrush Color="{DynamicResource RegionColor}" x:Key="scWhiteBrush" />
+            <SolidColorBrush Color="{DynamicResource PrimaryColor}" x:Key="scGoldEnrodBrush" />
+            <SolidColorBrush Color="{DynamicResource LightPrimaryColor}" x:Key="scPaleGoldenrodBrush" />
+            <SolidColorBrush Color="{DynamicResource SecondaryRegionColor}" x:Key="scLightYellowBrush" />
             <SolidColorBrush Color="#E9EDF3" x:Key="scDisabledBackgroundBrush" />
             <SolidColorBrush Color="#C8D1DD" x:Key="scDisabledBorderBrush" />
             <SolidColorBrush Color="#8793A3" x:Key="scDisabledForegroundBrush" />

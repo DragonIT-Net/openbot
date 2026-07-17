@@ -10,13 +10,13 @@
 	<FrameworkElement.Resources>
 		<ResourceDictionary>
 			<SolidColorBrush
-				Color="#1E6BFF"
+				Color="{DynamicResource PrimaryColor}"
 				x:Key="rpSkyBlueBrush" />
 			<SolidColorBrush
-				Color="#FFFFFF"
+				Color="{DynamicResource RegionColor}"
 				x:Key="rpWhiteBrush" />
 			<SolidColorBrush
-				Color="#1E6BFF"
+				Color="{DynamicResource PrimaryColor}"
 				x:Key="rpDodgerBlueBrush" />
 			<SolidColorBrush
 				Color="#E9EDF3"
