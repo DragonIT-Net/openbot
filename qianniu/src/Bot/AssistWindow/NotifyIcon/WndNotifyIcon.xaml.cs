@@ -18,6 +18,7 @@ using BotLib.Extensions;
 using BotLib.Misc;
 using BotLib.Wpf.Extensions;
 using Bot.Common.Windows;
+using Bot.Options;
 
 namespace Bot.AssistWindow.NotifyIcon
 {
@@ -111,6 +112,11 @@ namespace Bot.AssistWindow.NotifyIcon
             {
                 System.Windows.Application.Current.Shutdown();
             }
+        }
+
+        private void btnOption_Click(object sender, EventArgs e)
+        {
+            WndOption.MyShow("基础设置", null, OptionEnum.RemindPay);
         }
 
         public void AddSellerMenuItem(string nick)

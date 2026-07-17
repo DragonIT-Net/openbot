@@ -73,6 +73,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
     </UserControl.Resources>
     <Grid Margin="0" Background="{StaticResource uiSurfaceBrush}">
         <Grid.RowDefinitions>
@@ -101,17 +102,17 @@
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" />
-                <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
             <TextBlock Margin="10 0 0 0"  Text="正在接待" Foreground="#FFFFFFFF" FontSize="12" VerticalAlignment="Center"></TextBlock>
             <TextBlock Margin="6 0 0 0" x:Name="txtBuyer" Text="..." Grid.Column="1"
                 Foreground="#FFFFFFFF" FontWeight="Bold" FontSize="13"
+                TextTrimming="CharacterEllipsis"
                 VerticalAlignment="Center"></TextBlock>
             <CheckBox
                 Name="cboxAuto"
-                Grid.Column="3"
+                Grid.Column="2"
                 Margin="8 0 8 0"
                 ToolTip="自动切换到发送消息的客户，并将答案【直接发送】给顾客"
                 Foreground="#FFFFFFFF"

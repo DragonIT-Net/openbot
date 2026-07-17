@@ -197,6 +197,10 @@ namespace Bot.AssistWindow.Widget
 			}
 			tabItem.Style = (Style)FindResource("tabRightPanel");
 			tabControl.Items.Add(tabItem);
+			if (tabControl.Items.Count == 1)
+			{
+				tabControl.SelectedItem = tabItem;
+			}
 		}
 
 		public TabItem GetTabItem(TabTypeEnum tabType)

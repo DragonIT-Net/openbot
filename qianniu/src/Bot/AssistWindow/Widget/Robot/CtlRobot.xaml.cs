@@ -183,5 +183,13 @@ namespace Bot.AssistWindow.Widget.Robot
         {
             Params.Robot.SetIsAutoReply(cboxAuto.IsChecked ?? false);
         }
+
+        private void btnHidePanel_Click(object sender, RoutedEventArgs e)
+        {
+            if (Wnd != null)
+            {
+                Wnd.HidePanelRight();
+            }
+        }
     }
 }
