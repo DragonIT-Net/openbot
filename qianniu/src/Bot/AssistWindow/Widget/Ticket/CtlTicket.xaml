@@ -1,0 +1,54 @@
+<UserControl x:Class="Bot.AssistWindow.Widget.Ticket.CtlTicket"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="{StaticResource uiSurfaceSoftBrush}">
+    <UserControl.Resources>
+        <Style x:Key="TicketConfirmButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Background" Value="{StaticResource uiAccentBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="root" Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="root" Property="Background" Value="#1F5FE5" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="root" Property="Background" Value="#1749B3" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="root" Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    <Grid>
+        <StackPanel Margin="14">
+            <TextBlock Text="智能工单" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource uiTextBrush}" />
+            <TextBlock Margin="0 6 0 12" Text="选择问题类型后，将根据当前客服与买家生成可编辑工单。" TextWrapping="Wrap" Foreground="{StaticResource uiSubtleTextBrush}" />
+            <TextBlock Text="问题类型" Foreground="{StaticResource uiTextBrush}" />
+            <ComboBox x:Name="cmbCategory" Margin="0 5 0 14" Height="30" SelectedIndex="0">
+                <ComboBoxItem Content="订单类问题" Tag="OrderIssue" />
+                <ComboBoxItem Content="发票类问题" Tag="InvoiceIssue" />
+                <ComboBoxItem Content="技术类问题" Tag="TechIssue" />
+                <ComboBoxItem Content="客诉类问题" Tag="ComplaintIssue" />
+            </ComboBox>
+            <Button Content="确认" Height="36" Style="{StaticResource TicketConfirmButtonStyle}" Click="btnConfirm_Click" />
+        </StackPanel>
+        <Border x:Name="pnlLoading" Visibility="Collapsed" Background="#A8FFFFFF">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressBar Width="160" Height="5" IsIndeterminate="True" />
+                <TextBlock Margin="0 10 0 0" Text="正在提取工单信息…" HorizontalAlignment="Center" Foreground="{StaticResource uiTextBrush}" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

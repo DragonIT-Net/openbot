@@ -5,6 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:local="clr-namespace:Bot.AssistWindow.Widget.Robot"
+    xmlns:ticket="clr-namespace:Bot.AssistWindow.Widget.Ticket"
 	MinWidth="270"
 	Background="{StaticResource uiSurfaceBrush}"
 	FontFamily="{StaticResource uiFontFamily}">
@@ -79,8 +80,8 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="40"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="92"/>
         </Grid.RowDefinitions>       
 
         <Grid Visibility="Collapsed">
@@ -120,7 +121,18 @@
                 VerticalAlignment="Center"
                 Click="cboxAuto_Click">自动回复</CheckBox>
         </Grid>
-        <ScrollViewer x:Name="scvBody" Grid.Row="2" Margin="0" Background="{StaticResource uiSurfaceSoftBrush}">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="8 0 8 6">
+            <ToggleButton x:Name="btnChatTab" IsChecked="True" Tag="Chat" Click="tab_Click" ToolTip="聊天记录" Width="40" Height="35" Margin="0 0 6 0">
+                <Image Source="/Bot;component/Asset/image/ticket-tabs/chat.png" Width="18" Height="18" Stretch="Uniform" />
+            </ToggleButton>
+            <ToggleButton x:Name="btnTicketTab" Tag="Ticket" Click="tab_Click" ToolTip="智能工单" Width="40" Height="35" Margin="0 0 6 0">
+                <Image Source="/Bot;component/Asset/image/ticket-tabs/ticket.png" Width="18" Height="18" Stretch="Uniform" />
+            </ToggleButton>
+            <ToggleButton x:Name="btnQaTab" Tag="Qa" Click="tab_Click" ToolTip="智能问答" Width="40" Height="35">
+                <Image Source="/Bot;component/Asset/image/ticket-tabs/qa.png" Width="18" Height="18" Stretch="Uniform" />
+            </ToggleButton>
+        </StackPanel>
+        <ScrollViewer x:Name="scvBody" Grid.Row="3" Margin="0" Background="{StaticResource uiSurfaceSoftBrush}">
             <StackPanel x:Name="stkDialog" Margin="8 2 8 8">
                 <Grid
                     Name="grdShowConv"
@@ -172,8 +184,10 @@
                 --><!-- 更多消息... -->
             </StackPanel>
         </ScrollViewer>
-        <Border
+        <ticket:CtlTicket x:Name="ctlTicket" Grid.Row="3" Visibility="Collapsed" />
+        <Border x:Name="pnlQa"
             Grid.Row="3"
+            Visibility="Collapsed"
             Margin="8 0 8 8"
             Background="{StaticResource uiSurfaceBrush}"
             BorderBrush="{StaticResource uiBorderBrush}"

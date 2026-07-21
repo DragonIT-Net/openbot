@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ICSharpCode.SharpZipLib.Zip;
 using BotLib;
@@ -26,6 +27,7 @@ namespace Bot.Common
         private const string overWriteUrl = "https://worklink.oss-cn-hangzhou.aliyuncs.com/5CFB5E11D17E63CDD8CB37B52FA6ACFD.js"; 
         private const string localWsUrl = "ws://127.0.0.1:41010";
         private const string injectMarker = "___setupWebSocket";
+        private const string injectVersionMarker = "qn-image-forward-v2";
 
 
         public static async Task StartInject()
@@ -304,12 +306,14 @@ namespace Bot.Common
                         var chatRecentHtmlContent = streamReader.ReadToEnd();
                         var hasLocalSocket = chatRecentHtmlContent.Contains(localWsUrl);
                         var hasMarker = chatRecentHtmlContent.Contains(injectMarker);
-                        Log.Info(string.Format("[注入诊断] 注入内容检查：HasLocalSocket={0}, HasMarker={1}, HasRemoteWorklink={2}, HasOriginalImSupport={3}",
+                        var hasCurrentVersion = chatRecentHtmlContent.Contains(injectVersionMarker);
+                        Log.Info(string.Format("[注入诊断] 注入内容检查：HasLocalSocket={0}, HasMarker={1}, HasCurrentVersion={2}, HasRemoteWorklink={3}, HasOriginalImSupport={4}",
                             hasLocalSocket,
                             hasMarker,
+                            hasCurrentVersion,
                             chatRecentHtmlContent.Contains(overWriteUrl),
                             chatRecentHtmlContent.Contains(imSupportUrl)));
-                        return hasLocalSocket && hasMarker;
+                        return hasLocalSocket && hasMarker && hasCurrentVersion;
                     }
                 }
             }
@@ -329,13 +333,35 @@ namespace Bot.Common
                     using (var streamReader = new StreamReader(inputStream))
                     {
                         var chatRecentHtmlContent = streamReader.ReadToEnd();
-                        if (chatRecentHtmlContent.Contains(localWsUrl) && chatRecentHtmlContent.Contains(injectMarker))
+                        if (chatRecentHtmlContent.Contains(localWsUrl)
+                            && chatRecentHtmlContent.Contains(injectMarker)
+                            && chatRecentHtmlContent.Contains(injectVersionMarker))
                         {
                             return true;
                         }
 
                         var beforeContent = chatRecentHtmlContent;
                         var inlineScriptAssignment = "script.text = " + JsonConvert.SerializeObject(injectScript) + ";";
+                        if (chatRecentHtmlContent.Contains(localWsUrl) && chatRecentHtmlContent.Contains(injectMarker))
+                        {
+                            chatRecentHtmlContent = new Regex(
+                                "script\\.text\\s*=\\s*\"(?:\\\\.|[^\"\\\\])*\"\\s*;")
+                                .Replace(chatRecentHtmlContent, inlineScriptAssignment, 1);
+                            if (beforeContent != chatRecentHtmlContent)
+                            {
+                                Log.Info("[注入诊断] 已升级本地监听脚本。 ");
+                            }
+                            else
+                            {
+                                var inlineScriptTag = "<script>\r\n" + injectScript.Replace("</script>", "<\\/script>") + "\r\n</script>";
+                                chatRecentHtmlContent = chatRecentHtmlContent.Contains("</body>")
+                                    ? chatRecentHtmlContent.Replace("</body>", inlineScriptTag + "\r\n  </body>")
+                                    : chatRecentHtmlContent + "\r\n" + inlineScriptTag;
+                                Log.Info("[注入诊断] 未能定位旧脚本，已追加新版本地监听脚本。 ");
+                            }
+                        }
+                        else
+                        {
                         chatRecentHtmlContent = chatRecentHtmlContent.Replace(
                             "script.src = \"" + imSupportUrl + "\";",
                             inlineScriptAssignment);
@@ -359,6 +385,7 @@ namespace Bot.Common
                         else
                         {
                             Log.Info("[注入诊断] 已将远程脚本替换为本地监听脚本。");
+                        }
                         }
 
                         zipFile.BeginUpdate();

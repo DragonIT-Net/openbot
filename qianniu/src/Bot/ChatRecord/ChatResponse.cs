@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Bot.ChatRecord
 {
@@ -47,6 +48,7 @@ namespace Bot.ChatRecord
     public class Value
     {
         public string text { get; set; }
+        public string url { get; set; }
     }
 
     public class JsviewItem
@@ -57,9 +59,11 @@ namespace Bot.ChatRecord
 
     public class OriginalData
     {
-        public string url;
+        [JsonProperty("url")]
+        public string Url { get; set; }
         public OriginalDataHeader header { get; set; }
         public string fileId { get; set; }
+        public List<JsviewItem> jsview { get; set; }
         /// <summary>
         /// 文字消息，可能是商品链接
         /// </summary>

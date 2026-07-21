@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Bot.Automation.ChatDeskNs;
 using Bot.ChatRecord;
+using Bot.Ticket;
 using Newtonsoft.Json;
 using BotLib;
 using System.Diagnostics;
@@ -35,6 +36,7 @@ namespace Bot.ChromeNs
             new ConcurrentDictionary<string, PendingAiReply>();
         private static readonly ConcurrentDictionary<string, DateTime> processedIncomingMessages =
             new ConcurrentDictionary<string, DateTime>();
+        private static readonly IChatMessagePublisher chatMessagePublisher = new ChatMessagePublisher();
         public string QnVersion { get; set; }
 
         private CDPClient cdp;
@@ -201,6 +203,57 @@ namespace Bot.ChromeNs
             return index < 0 ? sellerName : sellerName.Substring(0, index);
         }
 
+        private async Task PublishChatMessagesAsync(List<QNChatMessage> messages)
+        {
+            if (_seller == null || messages == null || messages.Count < 1)
+            {
+                return;
+            }
+
+            var payload = new List<ChatMessageDto>();
+            foreach (var message in messages)
+            {
+                if (message == null) continue;
+                DateTime sendTime;
+                if (!DateTime.TryParse(message.sendTime, out sendTime)) sendTime = DateTime.Now;
+                var fromNick = message.fromid == null ? string.Empty : message.fromid.nick;
+                var toNick = message.toid == null ? string.Empty : message.toid.nick;
+                var fileUrl = GetMessageFileUrl(message.originalData);
+                var messageText = message.summary ?? string.Empty;
+                if (!string.IsNullOrEmpty(fileUrl))
+                {
+                    messageText = string.Format("{0}\n图片链接：{1}", string.IsNullOrEmpty(messageText) ? "[图片]" : messageText, fileUrl);
+                }
+                payload.Add(new ChatMessageDto
+                {
+                    Ccode = message.cid == null ? string.Empty : message.cid.ccode,
+                    BuyerNick = fromNick == _seller.Nick ? toNick : fromNick,
+                    FromNick = fromNick,
+                    ToNick = toNick,
+                    IsBuyerSend = fromNick != _seller.Nick,
+                    SendTime = sendTime,
+                    TemplateId = message.templateId,
+                    MessageText = messageText,
+                    FileId = message.originalData == null ? string.Empty : message.originalData.fileId,
+                    FileUrl = fileUrl,
+                    ClientId = message.mcode == null ? string.Empty : message.mcode.clientId,
+                    MessageId = message.mcode == null ? string.Empty : message.mcode.messageId,
+                    OrderNo = string.Empty
+                });
+            }
+
+            await chatMessagePublisher.PublishAsync(_seller.Nick, GetShopName(_seller.Nick), payload);
+        }
+
+        private static string GetMessageFileUrl(OriginalData originalData)
+        {
+            if (originalData == null) return string.Empty;
+            if (!string.IsNullOrEmpty(originalData.Url)) return originalData.Url;
+            if (originalData.jsview == null) return string.Empty;
+            var imageView = originalData.jsview.FirstOrDefault(item => item != null && item.value != null && !string.IsNullOrEmpty(item.value.url));
+            return imageView == null ? string.Empty : imageView.value.url;
+        }
+
 
         public async Task SendTextAsync(string buyer, string text)
         {
@@ -363,8 +416,11 @@ namespace Bot.ChromeNs
                     var messageId = m.mcode == null ? string.Empty : m.mcode.messageId;
                     var wwMsgId = m.ext == null ? 0 : m.ext.ww_msgid;
                     var isBuyerSend = m.loginid != null && m.toid != null && m.loginid.nick == m.toid.nick;
+                    var fileUrl = GetMessageFileUrl(m.originalData);
                     var hasImage = !string.IsNullOrEmpty(fileId)
-                        && new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp" }.Any(ext => fileId.ToLower().EndsWith(ext));
+                        || (!string.IsNullOrEmpty(fileUrl)
+                            && new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp" }
+                                .Any(ext => fileUrl.ToLower().Contains(ext)));
                     var messageText = originalText + headerSummary;
 
                     Log.Info(string.Format(
@@ -386,7 +442,7 @@ namespace Bot.ChromeNs
                         originalText,
                         headerTitle,
                         headerSummary,
-                        actionUrl,
+                        string.IsNullOrEmpty(fileUrl) ? actionUrl : fileUrl,
                         fileId,
                         UserIdToText("From", m.fromid),
                         UserIdToText("To", m.toid),
@@ -510,6 +566,15 @@ namespace Bot.ChromeNs
                     return;
                 }
                 var messages = chatRes.result;
+                try
+                {
+                    await PublishChatMessagesAsync(messages);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception(ex);
+                    Log.Error("聊天记录推送失败，已跳过本次推送；千牛消息监听和自动回复将继续执行。");
+                }
                 foreach (var m in messages)
                 {
                     if (m == null || m.fromid == null || m.toid == null || _seller == null)
@@ -529,6 +594,18 @@ namespace Bot.ChromeNs
                                 m.sendTime,
                                 m.summary));
                             continue;
+                        }
+
+                        if (!string.IsNullOrEmpty(m.fromid.targetId))
+                        {
+                            Log.Info(string.Format("[订单查询] 收到买家消息，尝试按买家查询订单。Buyer={0}, BuyerId={1}",
+                                m.fromid.nick,
+                                m.fromid.targetId));
+                            await GetBuyerTrades(m.fromid.targetId, string.Empty);
+                        }
+                        else
+                        {
+                            Log.Info(string.Format("[订单查询] 收到买家消息，但未携带买家ID。Buyer={0}", m.fromid.nick));
                         }
 
                         var isAutoReply = Params.Robot.GetIsAutoReply();
@@ -706,7 +783,13 @@ namespace Bot.ChromeNs
 
         public async Task<ZnkfTradeQueryResponse> GetBuyerTrades(string securityBuyerUid, string bizOrderId)
         {
-            return await cdp.GetBuyerTrades(securityBuyerUid, bizOrderId);
+            var response = await cdp.GetBuyerTrades(securityBuyerUid, bizOrderId);
+            Log.Info(string.Format(
+                "[订单查询] 买家ID={0}, 请求订单号={1}, 返回数据={2}",
+                securityBuyerUid,
+                bizOrderId,
+                JsonConvert.SerializeObject(response, Formatting.Indented)));
+            return response;
         }
 
         public async Task<ConversationResponse> GetCurrentConversationID()
