@@ -36,6 +36,23 @@
                 Foreground="#6B7280"
                 Margin="0 6 0 0"
                 Width="500" />
+
+            <TextBlock
+                Text="钉钉提交人账号"
+                Foreground="#374151"
+                Margin="0 18 0 6" />
+            <TextBox
+                x:Name="txtDingTalkSubmitterAccount"
+                Height="28"
+                Padding="6 3"
+                Width="460"
+                HorizontalAlignment="Left" />
+            <TextBlock
+                Text="填写手机号或钉钉 userid。提交智能工单时将作为钉钉 AI 表格的操作人。"
+                TextWrapping="Wrap"
+                Foreground="#6B7280"
+                Margin="0 8 0 0"
+                Width="500" />
         </StackPanel>
     </Border>
 </UserControl>

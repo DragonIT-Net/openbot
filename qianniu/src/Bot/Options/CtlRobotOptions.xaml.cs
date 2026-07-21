@@ -56,6 +56,7 @@ namespace Bot.Options
             _seller = seller;
             _sellerMain = TbNickHelper.GetMainPart(seller);
             txtQianNiuInstallPath.Text = Params.Robot.GetQianNiuInstallPath();
+            txtDingTalkSubmitterAccount.Text = Params.DingTalk.GetSubmitterAccount();
 
         }
 
@@ -67,7 +68,9 @@ namespace Bot.Options
         public void RestoreDefault()
         {
             Params.Robot.SetQianNiuInstallPath(string.Empty);
+            Params.DingTalk.SetSubmitterAccount(string.Empty);
             txtQianNiuInstallPath.Text = string.Empty;
+            txtDingTalkSubmitterAccount.Text = string.Empty;
         }
 
         public bool Save(string seller)
@@ -86,6 +89,7 @@ namespace Bot.Options
             }
 
             Params.Robot.SetQianNiuInstallPath(installPath);
+            Params.DingTalk.SetSubmitterAccount(txtDingTalkSubmitterAccount.Text.Trim());
             return true;
         }
 

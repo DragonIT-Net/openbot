@@ -184,6 +184,19 @@ namespace Bot.AssistWindow.Widget.Robot
             Params.Robot.SetIsAutoReply(cboxAuto.IsChecked ?? false);
         }
 
+        private void tab_Click(object sender, RoutedEventArgs e)
+        {
+            var selected = sender as ToggleButton;
+            if (selected == null) return;
+
+            btnChatTab.IsChecked = selected == btnChatTab;
+            btnTicketTab.IsChecked = selected == btnTicketTab;
+            btnQaTab.IsChecked = selected == btnQaTab;
+            scvBody.Visibility = selected == btnChatTab ? Visibility.Visible : Visibility.Collapsed;
+            ctlTicket.Visibility = selected == btnTicketTab ? Visibility.Visible : Visibility.Collapsed;
+            pnlQa.Visibility = selected == btnQaTab ? Visibility.Visible : Visibility.Collapsed;
+        }
+
         private void btnHidePanel_Click(object sender, RoutedEventArgs e)
         {
             if (Wnd != null)

@@ -317,6 +317,20 @@ namespace Bot
 
         }
 
+        public class DingTalk
+        {
+            public static string GetSubmitterAccount()
+            {
+                return PersistentParams.GetParam("DingTalkSubmitterAccount", string.Empty);
+            }
+
+            public static void SetSubmitterAccount(string account)
+            {
+                PersistentParams.TrySaveParam("DingTalkSubmitterAccount", account ?? string.Empty);
+            }
+
+        }
+
     }
 
 }

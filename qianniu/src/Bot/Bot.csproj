@@ -240,6 +240,12 @@
     <Compile Include="AssistWindow\Widget\Robot\CtlRobot.xaml.cs">
       <DependentUpon>CtlRobot.xaml</DependentUpon>
     </Compile>
+    <Compile Include="AssistWindow\Widget\Ticket\CtlTicket.xaml.cs">
+      <DependentUpon>CtlTicket.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ChatRecord\ChatMessageDto.cs" />
+    <Compile Include="ChatRecord\ChatMessagePublisher.cs" />
+    <Compile Include="ChatRecord\IChatMessagePublisher.cs" />
     <Compile Include="ChromeNs\AiReplyAnalysisClient.cs" />
     <Compile Include="ChromeNs\BetterYeahClient.cs" />
     <Compile Include="ChromeNs\MyOpenAI.cs" />
@@ -251,6 +257,9 @@
     <Compile Include="Common\Trivial\SynableImageHelper.cs" />
     <Compile Include="Common\Windows\WndLoading.xaml.cs">
       <DependentUpon>WndLoading.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Common\Windows\WndTicketForm.xaml.cs">
+      <DependentUpon>WndTicketForm.xaml</DependentUpon>
     </Compile>
     <Compile Include="AssistWindow\NotifyIcon\WndNotifyIcon.xaml.cs">
       <DependentUpon>WndNotifyIcon.xaml</DependentUpon>
@@ -318,6 +327,16 @@
     <Compile Include="StartUp\BootStrap.cs" />
     <Compile Include="StartUp\Params.cs" />
     <Compile Include="StartUp\StartUp.cs" />
+    <Compile Include="Ticket\ITicketFormExtractor.cs" />
+    <Compile Include="Ticket\ITicketOptionProvider.cs" />
+    <Compile Include="Ticket\TicketCategoryEnum.cs" />
+    <Compile Include="Ticket\TicketApiClient.cs" />
+    <Compile Include="Ticket\DingTalkTicketSubmitter.cs" />
+    <Compile Include="Ticket\TicketFieldDefinitions.cs" />
+    <Compile Include="Ticket\TicketFormData.cs" />
+    <Compile Include="Ticket\TicketFormExtractor.cs" />
+    <Compile Include="Ticket\TicketOptionProvider.cs" />
+    <Compile Include="Ticket\TicketOptionSet.cs" />
     <Page Include="AssistWindow\Widget\Robot\CtlConversation.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -334,7 +353,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="AssistWindow\Widget\Ticket\CtlTicket.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Common\Windows\WndLoading.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Common\Windows\WndTicketForm.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -468,6 +495,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Asset\image\remindpay_16.png" />
+    <Resource Include="Asset\image\ticket-tabs\chat.png" />
+    <Resource Include="Asset\image\ticket-tabs\ticket.png" />
+    <Resource Include="Asset\image\ticket-tabs\qa.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Asset\image\decrypt.png" />

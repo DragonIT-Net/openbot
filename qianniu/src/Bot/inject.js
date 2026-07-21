@@ -89,7 +89,7 @@ if (typeof window.___setupWebSocket === 'undefined') {
     )
   })
 
-  if (typeof(window.onInvokeNotifyDelegate) == 'undefined') {
+  if (typeof(window.onInvokeNotifyDelegate) == 'undefined' || !window.___qnImageForwardV2) {
     imsdk.on(['im.singlemsg.onReceiveNewMsg'], cids => {
       cids.forEach(async cid=>{
         let conv = getCacheConv(cid.ccode)
@@ -104,11 +104,13 @@ if (typeof window.___setupWebSocket === 'undefined') {
       })
     })
     window.onInvokeNotifyDelegate = window.onInvokeNotify;
+    window.___qnImageForwardV2 = true;
     window.onInvokeNotify = function(sid, status, response) {
       window.onInvokeNotifyDelegate(sid, status, response);
 
         var task = TASK_CACHE[sid];
-        if (task.config.fn == 'im.singlemsg.GetNewMsg' && task.config.param.ccode == window._conversationId.ccode) {
+        // qn-image-forward-v2：所有会话的新消息都转发，避免非当前会话的图片消息被遗漏。
+        if (task && task.config && task.config.fn == 'im.singlemsg.GetNewMsg') {
             window.chatWebsocket.send(JSON.stringify({type:'receiveNewMsg',response}));
         }
     }
