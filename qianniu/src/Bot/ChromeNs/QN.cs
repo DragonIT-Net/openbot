@@ -45,6 +45,9 @@ namespace Bot.ChromeNs
         private static readonly ConcurrentDictionary<string, List<QNChatMessage>> burstMessages =
             new ConcurrentDictionary<string, List<QNChatMessage>>();
         private const int MaxBurstRetries = 3;
+        // 买家从订单详情页点进来咨询时，千牛会自动插入一条"当前用户来自 订单XXX"的系统提示卡片，
+        // 结构上跟普通消息一样但 originalData 为空、templateId 固定是 129，不是买家真正打的字，不能算进发给 AI 的对话历史
+        private const int EntryIntoStoreTemplateId = 129;
         public string QnVersion { get; set; }
 
         private CDPClient cdp;
@@ -702,6 +705,14 @@ namespace Bot.ChromeNs
                         else
                         {
                             Log.Info(string.Format("[订单查询] 收到买家消息，但未携带买家ID。Buyer={0}", m.fromid.nick));
+                        }
+
+                        if (m.templateId == EntryIntoStoreTemplateId)
+                        {
+                            Log.Info(string.Format("[进店提示过滤] 跳过系统进店提示卡片，不计入AI对话历史。Buyer={0}, Summary={1}",
+                                m.fromid.nick,
+                                m.summary));
+                            continue;
                         }
 
                         await HandleBuyerMessageWithCoalescingAsync(m);
