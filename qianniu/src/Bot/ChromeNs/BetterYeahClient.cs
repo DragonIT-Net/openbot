@@ -26,30 +26,49 @@ namespace Bot.ChromeNs
             httpClient.Timeout = TimeSpan.FromSeconds(60);
         }
 
-        public static async Task<string> GetAnswerAsync(QN qn, QNChatMessage message)
+        /// <summary>
+        /// 只把买家/客服消息追加进对话历史，不发起接口调用。
+        /// 由调用方（QN）决定什么时候真正调用 <see cref="RequestAnswerForHistoryAsync"/>。
+        /// </summary>
+        public static void AppendUserMessage(QN qn, QNChatMessage message)
         {
-            if (qn == null || qn.Seller == null || message == null || message.fromid == null || message.toid == null)
+            if (qn == null || qn.Seller == null || message == null || message.fromid == null)
+            {
+                return;
+            }
+
+            var sellerNick = qn.Seller.Nick;
+            var buyerNick = message.fromid.nick;
+            var key = string.Format("{0}#{1}", sellerNick, buyerNick);
+            var timestamp = ParseTimestamp(message.sendTime);
+
+            var history = buyerMessages.GetOrAdd(key, id => new List<BetterYeahMessage>());
+            lock (history)
+            {
+                history.Add(BetterYeahMessage.User(message.summary, timestamp));
+                TrimHistory(history);
+            }
+        }
+
+        /// <summary>
+        /// 用当前历史快照（包含调用前已经 Append 进去的全部消息）发起一次请求。
+        /// </summary>
+        public static async Task<string> RequestAnswerForHistoryAsync(QN qn, string buyerNick, string buyerTargetId)
+        {
+            if (qn == null || qn.Seller == null || string.IsNullOrEmpty(buyerNick))
             {
                 return "错误：BetterYeah调用失败，缺少千牛会话信息";
             }
 
             var sellerNick = qn.Seller.Nick;
             var assistantId = string.IsNullOrEmpty(qn.Seller.Display) ? qn.Seller.Nick : qn.Seller.Display;
-            var buyerNick = message.fromid.nick;
-            var question = message.summary;
             var key = string.Format("{0}#{1}", sellerNick, buyerNick);
-            var timestamp = ParseTimestamp(message.sendTime);
-            var buyerTargetId = qn.Buyer == null || string.IsNullOrEmpty(qn.Buyer.TargetId)
-                ? message.fromid.targetId
+            var resolvedTargetId = qn.Buyer == null || string.IsNullOrEmpty(qn.Buyer.TargetId)
+                ? buyerTargetId
                 : qn.Buyer.TargetId;
-            var productIds = await GetProductIdsAsync(qn, buyerTargetId);
+            var productIds = await GetProductIdsAsync(qn, resolvedTargetId);
 
             var history = buyerMessages.GetOrAdd(key, id => new List<BetterYeahMessage>());
-            lock (history)
-            {
-                history.Add(BetterYeahMessage.User(question, timestamp));
-                TrimHistory(history);
-            }
 
             try
             {

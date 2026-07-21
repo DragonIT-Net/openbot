@@ -37,6 +37,14 @@ namespace Bot.ChromeNs
         private static readonly ConcurrentDictionary<string, DateTime> processedIncomingMessages =
             new ConcurrentDictionary<string, DateTime>();
         private static readonly IChatMessagePublisher chatMessagePublisher = new ChatMessagePublisher();
+        // 买家连续碎片消息合并：谁正在处理中、消息到达版本号、当前批次的原始消息（详见 docs/adr/0002-buyer-message-burst-coalescing.md）
+        private static readonly ConcurrentDictionary<string, byte> burstProcessing =
+            new ConcurrentDictionary<string, byte>();
+        private static readonly ConcurrentDictionary<string, int> burstVersion =
+            new ConcurrentDictionary<string, int>();
+        private static readonly ConcurrentDictionary<string, List<QNChatMessage>> burstMessages =
+            new ConcurrentDictionary<string, List<QNChatMessage>>();
+        private const int MaxBurstRetries = 3;
         public string QnVersion { get; set; }
 
         private CDPClient cdp;
@@ -509,6 +517,94 @@ namespace Bot.ChromeNs
             }
         }
 
+        /// <summary>
+        /// 买家连续快速发送多条碎片消息时，只触发一次 AI 回复：消息到达立即追加历史，
+        /// 没有正在处理的请求时才真正调用接口；请求期间历史又变长的话丢弃结果、用最新历史重试（最多 <see cref="MaxBurstRetries"/> 次）。
+        /// 详见 docs/adr/0002-buyer-message-burst-coalescing.md。
+        /// </summary>
+        private async Task HandleBuyerMessageWithCoalescingAsync(QNChatMessage m)
+        {
+            var buyerKey = BuildAiReplyKey(_seller.Nick, m.fromid.nick);
+
+            BetterYeahClient.AppendUserMessage(this, m);
+            burstMessages.AddOrUpdate(buyerKey,
+                key => new List<QNChatMessage> { m },
+                (key, list) =>
+                {
+                    lock (list)
+                    {
+                        list.Add(m);
+                    }
+                    return list;
+                });
+            burstVersion.AddOrUpdate(buyerKey, 1, (key, v) => v + 1);
+
+            if (!burstProcessing.TryAdd(buyerKey, 0))
+            {
+                // 已经有一个请求在处理这个买家的消息，这条消息追加历史后交给那次请求处理即可，不重复发起
+                return;
+            }
+
+            try
+            {
+                string answer = null;
+                for (int attempt = 1; attempt <= MaxBurstRetries; attempt++)
+                {
+                    int versionBefore;
+                    burstVersion.TryGetValue(buyerKey, out versionBefore);
+
+                    answer = await BetterYeahClient.RequestAnswerForHistoryAsync(this, m.fromid.nick, m.fromid.targetId);
+
+                    int versionAfter;
+                    burstVersion.TryGetValue(buyerKey, out versionAfter);
+                    if (versionAfter == versionBefore || attempt == MaxBurstRetries)
+                    {
+                        break;
+                    }
+                    Log.Info(string.Format("[消息合并] 请求期间买家又发来新消息，重新请求。Seller={0}, Buyer={1}, 第{2}次重试",
+                        _seller.Nick, m.fromid.nick, attempt));
+                }
+
+                List<QNChatMessage> burst;
+                burstMessages.TryRemove(buyerKey, out burst);
+                burstVersion.TryRemove(buyerKey, out _);
+
+                var combinedQuestion = burst == null || burst.Count < 1
+                    ? m.summary
+                    : string.Join(string.Empty, burst.Select(bm => bm == null ? string.Empty : bm.summary));
+
+                var isAutoReply = Params.Robot.GetIsAutoReply();
+                CachePendingAiReply(_seller.Nick, m.fromid.nick, answer);
+                var desk = Desk.Inst;
+                if (desk != null)
+                {
+                    desk.AddConversation(m.toid.nick, m.fromid.nick, combinedQuestion, answer, isAutoReply);
+                }
+                else
+                {
+                    Log.Error("收到买家消息，但尚未检测到千牛接待窗口。");
+                }
+
+                if (isAutoReply && !string.IsNullOrEmpty(answer) && !answer.StartsWith("错误："))
+                {
+                    await SendTextAsync(m.fromid.nick, answer);
+                    await Task.Delay(2000);
+                }
+                else if (!isAutoReply && !string.IsNullOrEmpty(answer) && !answer.StartsWith("错误："))
+                {
+                    await PrepareTextAsync(m.fromid.nick, answer);
+                }
+                else if (isAutoReply && !string.IsNullOrEmpty(answer) && answer.StartsWith("错误："))
+                {
+                    Log.Error(answer);
+                }
+            }
+            finally
+            {
+                burstProcessing.TryRemove(buyerKey, out _);
+            }
+        }
+
         private void Cdp_EvShopRobotReceriveNewMessage(object sender, ShopRobotReceriveNewMessageEventArgs e)
         {
             DumpParsedEvent("onShopRobotReceriveNewMsgs", e.Seller, e.Buyer);
@@ -608,32 +704,7 @@ namespace Bot.ChromeNs
                             Log.Info(string.Format("[订单查询] 收到买家消息，但未携带买家ID。Buyer={0}", m.fromid.nick));
                         }
 
-                        var isAutoReply = Params.Robot.GetIsAutoReply();
-                        var answer = await BetterYeahClient.GetAnswerAsync(this, m);
-                        CachePendingAiReply(_seller.Nick, m.fromid.nick, answer);
-                        var desk = Desk.Inst;
-                        if (desk != null)
-                        {
-                            desk.AddConversation(m.toid.nick, m.fromid.nick, m.summary, answer, isAutoReply);
-                        }
-                        else
-                        {
-                            Log.Error("收到买家消息，但尚未检测到千牛接待窗口。");
-                        }
-
-                        if (isAutoReply && !string.IsNullOrEmpty(answer) && !answer.StartsWith("错误："))
-                        {
-                            await SendTextAsync(m.fromid.nick, answer);
-                            await Task.Delay(2000);
-                        }
-                        else if (!isAutoReply && !string.IsNullOrEmpty(answer) && !answer.StartsWith("错误："))
-                        {
-                            await PrepareTextAsync(m.fromid.nick, answer);
-                        }
-                        else if (isAutoReply && !string.IsNullOrEmpty(answer) && answer.StartsWith("错误："))
-                        {
-                            Log.Error(answer);
-                        }
+                        await HandleBuyerMessageWithCoalescingAsync(m);
                     }
                 }
             }
