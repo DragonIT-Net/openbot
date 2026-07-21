@@ -41,6 +41,7 @@ namespace Bot.AssistWindow.Widget.Robot
             _rightPanel = rp;
             buyerConversations = new ConcurrentDictionary<string, List<CtlConversation>>();
             Loaded += CtlRobot_Loaded;
+            ctlBuyerQueue.BuyerConfirmed += CtlBuyerQueue_BuyerConfirmed;
         }
 
         private WndAssist Wnd
@@ -89,6 +90,45 @@ namespace Bot.AssistWindow.Widget.Robot
                 grdTipNoConv.Visibility = Visibility.Collapsed;
                 stkDialog.Children.Add(ctlConversation);
                 scvBody.ScrollToEnd();
+            }
+
+            ctlBuyerQueue.UpdateAnswer(seller, buyer, question, answer, isAutoReply);
+        }
+
+        /// <summary>
+        /// 消息合并机制（见 docs/adr/0002-buyer-message-burst-coalescing.md）开始处理某个买家的消息时调用，
+        /// 在多买家汇总面板里显示"回复中"状态。
+        /// </summary>
+        public void MarkBuyerReplying(string seller, string buyer)
+        {
+            ctlBuyerQueue.MarkReplying(seller, buyer);
+        }
+
+        private async void CtlBuyerQueue_BuyerConfirmed(BuyerQueueItem item)
+        {
+            try
+            {
+                var qn = QN.FindBySellerNick(item.SellerNick);
+                if (qn == null)
+                {
+                    Log.Error(string.Format("[买家队列] 未找到对应的千牛账号实例，Seller={0}", item.SellerNick));
+                    return;
+                }
+
+                qn.OpenChat(item.BuyerNick);
+
+                if (!item.IsAutoReply && !string.IsNullOrEmpty(item.Answer))
+                {
+                    await qn.PrepareTextAsync(item.BuyerNick, item.Answer);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Exception(ex);
+            }
+            finally
+            {
+                ctlBuyerQueue.RemoveBuyer(item.BuyerNick);
             }
         }
 

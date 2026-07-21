@@ -81,8 +81,9 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="40"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>       
+        </Grid.RowDefinitions>
 
         <Grid Visibility="Collapsed">
             <Grid.RowDefinitions>
@@ -121,7 +122,8 @@
                 VerticalAlignment="Center"
                 Click="cboxAuto_Click">自动回复</CheckBox>
         </Grid>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="8 0 8 6">
+        <local:CtlBuyerQueue x:Name="ctlBuyerQueue" Grid.Row="2" />
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="8 0 8 6">
             <ToggleButton x:Name="btnChatTab" IsChecked="True" Tag="Chat" Click="tab_Click" ToolTip="聊天记录" Width="40" Height="35" Margin="0 0 6 0">
                 <Image Source="/Bot;component/Asset/image/ticket-tabs/chat.png" Width="18" Height="18" Stretch="Uniform" />
             </ToggleButton>
@@ -132,7 +134,7 @@
                 <Image Source="/Bot;component/Asset/image/ticket-tabs/qa.png" Width="18" Height="18" Stretch="Uniform" />
             </ToggleButton>
         </StackPanel>
-        <ScrollViewer x:Name="scvBody" Grid.Row="3" Margin="0" Background="{StaticResource uiSurfaceSoftBrush}">
+        <ScrollViewer x:Name="scvBody" Grid.Row="4" Margin="0" Background="{StaticResource uiSurfaceSoftBrush}">
             <StackPanel x:Name="stkDialog" Margin="8 2 8 8">
                 <Grid
                     Name="grdShowConv"
@@ -184,9 +186,9 @@
                 --><!-- 更多消息... -->
             </StackPanel>
         </ScrollViewer>
-        <ticket:CtlTicket x:Name="ctlTicket" Grid.Row="3" Visibility="Collapsed" />
+        <ticket:CtlTicket x:Name="ctlTicket" Grid.Row="4" Visibility="Collapsed" />
         <Border x:Name="pnlQa"
-            Grid.Row="3"
+            Grid.Row="4"
             Visibility="Collapsed"
             Margin="8 0 8 8"
             Background="{StaticResource uiSurfaceBrush}"

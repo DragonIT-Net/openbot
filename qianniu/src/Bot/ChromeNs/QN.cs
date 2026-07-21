@@ -548,6 +548,12 @@ namespace Bot.ChromeNs
                 return;
             }
 
+            var desk = Desk.Inst;
+            if (desk != null)
+            {
+                desk.MarkBuyerReplying(_seller.Nick, m.fromid.nick);
+            }
+
             try
             {
                 string answer = null;
@@ -578,7 +584,6 @@ namespace Bot.ChromeNs
 
                 var isAutoReply = Params.Robot.GetIsAutoReply();
                 CachePendingAiReply(_seller.Nick, m.fromid.nick, answer);
-                var desk = Desk.Inst;
                 if (desk != null)
                 {
                     desk.AddConversation(m.toid.nick, m.fromid.nick, combinedQuestion, answer, isAutoReply);
@@ -767,6 +772,19 @@ namespace Bot.ChromeNs
                 QNSet.Add(qn);
             }
             return qn;
+        }
+
+        /// <summary>
+        /// 按客服昵称查找已存在的 QN 实例，找不到返回 null（不会像 <see cref="GetByNick"/> 那样自动创建）。
+        /// 供多买家汇总面板"确认"按钮按 SellerNick 找回对应账号用。
+        /// </summary>
+        public static QN FindBySellerNick(string sellerNick)
+        {
+            if (string.IsNullOrEmpty(sellerNick))
+            {
+                return null;
+            }
+            return QNSet.FirstOrDefault(q => q._seller != null && q._seller.Nick == sellerNick);
         }
 
         public void SendTimiMsg(string userId, string smartTip)

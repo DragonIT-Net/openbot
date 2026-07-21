@@ -400,6 +400,18 @@ namespace Bot.Automation.ChatDeskNs
             }));
         }
 
+        public void MarkBuyerReplying(string seller, string buyer)
+        {
+            DispatcherEx.xInvoke(new Action(() =>
+            {
+                if (CtlRobot == null)
+                {
+                    CtlRobot = inst.AssistWindow.ctlRightPanel.GetTabItem(Bot.AssistWindow.Widget.RightPanel.TabTypeEnum.Robot).Content as CtlRobot;
+                }
+                CtlRobot.MarkBuyerReplying(seller, buyer);
+            }));
+        }
+
         public void SetActiveQn()
         {
             //if (IsVisibleAndNotMinimized)
