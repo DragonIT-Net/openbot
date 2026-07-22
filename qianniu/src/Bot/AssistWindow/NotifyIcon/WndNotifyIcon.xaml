@@ -7,7 +7,7 @@
     xmlns:local="clr-namespace:Bot"
     xmlns:l="clr-namespace:Bot.AssistWindow.NotifyIcon"
     xmlns:forms="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
-    Title="QBot---Tray"
+    Title="智能客服助手"
     Width="550"
     SizeToContent="Height"
     WindowStartupLocation="CenterScreen"

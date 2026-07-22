@@ -25,6 +25,7 @@ namespace Bot.AssistWindow.NotifyIcon
     public partial class WndNotifyIcon : Window
     {
         private const int WM_HOTKEY = 786;
+        private const int MinimumSplashMilliseconds = 3500;
         private static WndNotifyIcon _inst;
         public static WndNotifyIcon Inst
         {
@@ -44,21 +45,27 @@ namespace Bot.AssistWindow.NotifyIcon
             Loaded += WndNotifyIcon_Loaded;
         }
 
-        private void WndNotifyIcon_Loaded(object sender, RoutedEventArgs e)
+        private async void WndNotifyIcon_Loaded(object sender, RoutedEventArgs e)
         {
             Loaded -= WndNotifyIcon_Loaded;
+            var splashStartedAt = DateTime.UtcNow;
             this.xMoveToWorkAreaCenter();
             this.xShowFirstTime();
-            DelayCaller.CallAfterDelay(() =>
-            {
-                Visibility = Visibility.Collapsed;
-            }, 5000, true);
             notifyIcon.Text = string.Format("{0}({1})", Params.AppName, Params.VersionStr);
             CreateHelpMenu();
             notifyIcon.StartBlink(base.FindResource("iconGray") as ImageSource);
 
+            // 先让启动页完成一次界面绘制，再执行可能占用 UI 线程的初始化。
+            await Task.Delay(150);
             BootStrap.Init();
             notifyIcon.StopBlink();
+
+            var elapsedMilliseconds = (int)(DateTime.UtcNow - splashStartedAt).TotalMilliseconds;
+            var remainingMilliseconds = MinimumSplashMilliseconds - elapsedMilliseconds;
+            if (remainingMilliseconds > 0)
+            {
+                await Task.Delay(remainingMilliseconds);
+            }
             Visibility = Visibility.Collapsed;
         }
 

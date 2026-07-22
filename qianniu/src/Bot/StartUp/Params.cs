@@ -26,7 +26,7 @@ namespace Bot
         public const string CreateDateStr = "2023.08.18";
         public static string HelpRoot;
         public const int KeepInstalledVersionsCount = 3;
-        public const string AppName = "智能辅助";
+        public const string AppName = "智能客服助手";
         public const int MaxAddQaCountForQuestionAndAnswersCiteTableManager = 30000;
         public const int MaxSynableQuestionTimeoutDays = 10;
         public static int BottomPannelAnswerCount;
