@@ -80,6 +80,8 @@ namespace Bot.AssistWindow.NotifyIcon
             IconProperty = DependencyProperty.Register("Icon", typeof(ImageSource), typeof(CtlNotifyIcon));
             TextProperty = DependencyProperty.Register("Text", typeof(string), typeof(CtlNotifyIcon));
             FormsContextMenuProperty = DependencyProperty.Register("MenuItems", typeof(List<ToolStripItem>), typeof(CtlNotifyIcon), new PropertyMetadata(new List<ToolStripItem>()));
+            // 全局生效，子菜单（如"帮助"的下拉）默认走 ManagerRenderMode，会自动继承这个渲染器。
+            ToolStripManager.Renderer = new TrayMenuRenderer();
         }
 
         public event MouseButtonEventHandler MouseClick
@@ -106,6 +108,9 @@ namespace Bot.AssistWindow.NotifyIcon
                 {
                     var contextMenuStrip = new ContextMenuStrip();
                     contextMenuStrip.Items.AddRange(MenuItems.ToArray());
+                    contextMenuStrip.Font = TrayMenuStyle.MenuFont;
+                    // 现在没有任何菜单项带图标，留着图标边距只会空出一条无意义的空白。
+                    contextMenuStrip.ShowImageMargin = false;
                     NotifyIconInner.ContextMenuStrip = contextMenuStrip;
                 }
             }
@@ -166,7 +171,8 @@ namespace Bot.AssistWindow.NotifyIcon
             return new ToolStripMenuItem(text, image, eventHandler)
             {
                 Enabled = enabled,
-                Tag = tag
+                Tag = tag,
+                Padding = new Padding(6, 3, 10, 3)
             };
         }
 

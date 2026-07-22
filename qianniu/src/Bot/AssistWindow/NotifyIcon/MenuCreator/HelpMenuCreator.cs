@@ -26,6 +26,13 @@ namespace Bot.AssistWindow.NotifyIcon.MenuCreator
             helpRootMenu.DropDownItems.Add(notifyIcon.CreateItem("清空日志", OnClearLogClicked));
             helpRootMenu.DropDownItems.Add(notifyIcon.CreateSeparator());
             helpRootMenu.DropDownItems.Add(notifyIcon.CreateItem("关于", OnAboutClicked));
+            // 子菜单是独立的 ToolStripDropDownMenu，不会跟着父级 ContextMenuStrip 的 Font 走，要单独设置。
+            helpRootMenu.DropDown.Font = TrayMenuStyle.MenuFont;
+            var helpDropDownMenu = helpRootMenu.DropDown as ToolStripDropDownMenu;
+            if (helpDropDownMenu != null)
+            {
+                helpDropDownMenu.ShowImageMargin = false;
+            }
         }
 
         private static void OnComeNoodles(object sender, EventArgs e)
