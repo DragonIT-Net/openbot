@@ -11,6 +11,7 @@ using Bot.Common.Db;
 using Bot.Common;
 using BotLib.Wpf.Extensions;
 using Bot.ChromeNs;
+using Bot.Update;
 
 namespace Bot
 {
@@ -27,6 +28,8 @@ namespace Bot
             Log.Info("[启动诊断] WebSocket服务启动流程已执行。");
             QNInject.StartInject();
             Log.Info("[启动诊断] 千牛注入检查流程已触发。");
+            Task.Run(() => UpdateManager.CheckOnStartupAsync());
+            Log.Info("[启动诊断] 检查更新流程已触发（异步，不阻塞启动）。");
 
             //var script = File.ReadAllText(Path.Combine(AppContext.BaseDirectory,"inject.js"));
             //IseiyaHttpProxy.StartProxy(script);

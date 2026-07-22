@@ -23,6 +23,7 @@
                 <forms:ToolStripMenuItem Text="帮助" />
                 <forms:ToolStripSeparator />
                 <forms:ToolStripSeparator />
+                <forms:ToolStripMenuItem Text="检查更新" Click="btnCheckUpdate_Click" />
                 <forms:ToolStripMenuItem Text="设置" Click="btnOption_Click" />
                 <forms:ToolStripMenuItem Text="退出" Click="btnExit_Click" />
             </l:CtlNotifyIcon.MenuItems>

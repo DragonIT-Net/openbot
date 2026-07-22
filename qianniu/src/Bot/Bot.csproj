@@ -352,6 +352,8 @@
     <Compile Include="Ticket\TicketFormExtractor.cs" />
     <Compile Include="Ticket\TicketOptionProvider.cs" />
     <Compile Include="Ticket\TicketOptionSet.cs" />
+    <Compile Include="Update\UpdateApiClient.cs" />
+    <Compile Include="Update\UpdateManager.cs" />
     <Page Include="AssistWindow\Widget\Robot\CtlConversation.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -549,11 +551,9 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Interop.UIAutomationClient.10.19041.0\build\Interop.UIAutomationClient.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Interop.UIAutomationClient.10.19041.0\build\Interop.UIAutomationClient.targets'))" />
   </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
+  <!-- 版本号以 installer\QianNiuBot.iss 里的 #define AppVersion 为唯一来源，编译前自动同步到
+       AssemblyInfo.cs 和 StartUp\Params.cs，发布新版本时只需要改那一处。见 tools\SyncVersion.ps1。 -->
   <Target Name="BeforeBuild">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\tools\SyncVersion.ps1&quot;" />
   </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
