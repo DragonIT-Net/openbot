@@ -145,7 +145,7 @@ namespace Bot.AssistWindow.Widget.Robot
 
             var confirmButton = new Button
             {
-                Content = "确认",
+                Content = "处理",
                 Padding = new Thickness(10, 3, 10, 3),
                 VerticalAlignment = VerticalAlignment.Center,
                 IsEnabled = !item.IsProcessing
