@@ -4,7 +4,7 @@
 ; AppVersion 是全项目唯一手动维护的版本号，发布新版本只改这一行——
 ; 编译 Bot.csproj 时会自动同步换算到 AssemblyInfo.cs 和 StartUp/Params.cs（见 tools/SyncVersion.ps1）。
 #define AppName "智能客服助手"
-#define AppVersion "1.0.2"
+#define AppVersion "1.0.3"
 #define AppPublisher ""
 #define AppExeName "Bot.exe"
 
@@ -40,7 +40,7 @@ Name: "chinesesimp"; MessagesFile: "ChineseSimplified.isl"
 ; 注意：必须装进 {app}\Bin 子目录，不能直接摊在 {app} 根目录——
 ; 程序的运行日志和 data\ 目录是按"exe 所在目录的上一级"定位的（见 PathEx.GetParentSiblingDir），
 ; 如果 exe 直接放在 {app} 根目录，日志/数据会被写到 {app} 的上一级（比如 C:\Program Files\）去。
-Source: "..\src\Bin\*"; DestDir: "{app}\Bin"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.pdb"
+Source: "..\src\Bot\bin\x64\Release\*"; DestDir: "{app}\Bin"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.pdb"
 
 [Tasks]
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加选项："
