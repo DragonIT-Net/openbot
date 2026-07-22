@@ -100,7 +100,13 @@ namespace Bot.SingleStartUp
             try
             {
                 Process.Start(processStartInfo);
-				Application.Current.Shutdown();
+                // Main is invoked before the WPF Application instance is created,
+                // so Application.Current is normally null here. Returning from Main
+                // is enough to close this non-elevated launcher process.
+                if (Application.Current != null)
+                {
+                    Application.Current.Shutdown();
+                }
             }
             catch (Exception ex)
             {
