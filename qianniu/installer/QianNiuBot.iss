@@ -40,7 +40,10 @@ Name: "chinesesimp"; MessagesFile: "ChineseSimplified.isl"
 ; 注意：必须装进 {app}\Bin 子目录，不能直接摊在 {app} 根目录——
 ; 程序的运行日志和 data\ 目录是按"exe 所在目录的上一级"定位的（见 PathEx.GetParentSiblingDir），
 ; 如果 exe 直接放在 {app} 根目录，日志/数据会被写到 {app} 的上一级（比如 C:\Program Files\）去。
-Source: "..\src\Bin\*"; DestDir: "{app}\Bin"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.pdb"
+; 直接从 Release|x64 的编译输出目录取文件，不再经过 src\Bin\ 这个中间目录——
+; 之前因为 Release|x64 编译输出的是 src\Bot\bin\x64\Release\，不会自动进 src\Bin\，
+; 打包时容易拿到没同步版本号的旧文件（1.0.3 更新循环那次的根因）。
+Source: "..\src\Bot\bin\x64\Release\*"; DestDir: "{app}\Bin"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.pdb"
 
 [Tasks]
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加选项："
