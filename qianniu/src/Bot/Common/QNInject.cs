@@ -27,7 +27,7 @@ namespace Bot.Common
         private const string overWriteUrl = "https://worklink.oss-cn-hangzhou.aliyuncs.com/5CFB5E11D17E63CDD8CB37B52FA6ACFD.js"; 
         private const string localWsUrl = "ws://127.0.0.1:41010";
         private const string injectMarker = "___setupWebSocket";
-        private const string injectVersionMarker = "qn-image-forward-v2";
+        private const string injectVersionMarker = "qn-background-message-v3";
 
 
         public static async Task StartInject()
@@ -102,6 +102,23 @@ namespace Bot.Common
             {
                 configuredPath = configuredPath.Trim();
                 Log.Info("[注入诊断] 已读取手动配置千牛安装目录=" + configuredPath);
+
+                // 用户曾把具体版本目录（例如 ...\9.97.10N）保存下来时，千牛升级后该目录仍然有效，
+                // 但实际运行的版本已经变了。优先回退到包含 AliWorkbench.ini 的父目录，按 ini 找当前版本。
+                var configuredParent = Directory.GetParent(configuredPath);
+                string parentResourcePath;
+                if (configuredParent != null
+                    && File.Exists(Path.Combine(configuredParent.FullName, "AliWorkbench.ini"))
+                    && TryResolveResourcePath(configuredParent.FullName, out parentResourcePath))
+                {
+                    Log.Info(string.Format("[注入诊断] 已将版本目录配置自动升级为千牛根目录。OldPath={0}, RootPath={1}, ResourcePath={2}",
+                        configuredPath,
+                        configuredParent.FullName,
+                        parentResourcePath));
+                    Params.Robot.SetQianNiuInstallPath(configuredParent.FullName);
+                    return configuredParent.FullName;
+                }
+
                 string configuredResourcePath;
                 if (TryResolveResourcePath(configuredPath, out configuredResourcePath))
                 {

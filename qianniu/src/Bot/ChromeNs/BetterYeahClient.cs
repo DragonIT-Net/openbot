@@ -42,12 +42,22 @@ namespace Bot.ChromeNs
             var key = string.Format("{0}#{1}", sellerNick, buyerNick);
             var timestamp = ParseTimestamp(message.sendTime);
 
+            string text;
+            string source;
+            if (!TryGetMessageText(message, out text, out source))
+            {
+                Log.Info(string.Format("[BetterYeah历史跳过] Seller={0}, Buyer={1}, 原因=消息没有可发送的文字内容", sellerNick, buyerNick));
+                return;
+            }
+
             var history = buyerMessages.GetOrAdd(key, id => new List<BetterYeahMessage>());
             lock (history)
             {
-                history.Add(BetterYeahMessage.User(message.summary, timestamp));
+                history.Add(BetterYeahMessage.User(text, timestamp));
                 TrimHistory(history);
             }
+            Log.Info(string.Format("[BetterYeah历史追加] Seller={0}, Buyer={1}, Source={2}, Text={3}",
+                sellerNick, buyerNick, source, text));
         }
 
         /// <summary>
@@ -63,9 +73,10 @@ namespace Bot.ChromeNs
             var sellerNick = qn.Seller.Nick;
             var assistantId = string.IsNullOrEmpty(qn.Seller.Display) ? qn.Seller.Nick : qn.Seller.Display;
             var key = string.Format("{0}#{1}", sellerNick, buyerNick);
-            var resolvedTargetId = qn.Buyer == null || string.IsNullOrEmpty(qn.Buyer.TargetId)
+            // 后台消息的买家可能不是当前聚焦会话，必须优先使用事件携带的 TargetId。
+            var resolvedTargetId = !string.IsNullOrEmpty(buyerTargetId)
                 ? buyerTargetId
-                : qn.Buyer.TargetId;
+                : (qn.Buyer == null ? string.Empty : qn.Buyer.TargetId);
             var productIds = await GetProductIdsAsync(qn, resolvedTargetId);
 
             var history = buyerMessages.GetOrAdd(key, id => new List<BetterYeahMessage>());
@@ -81,6 +92,11 @@ namespace Bot.ChromeNs
                 };
 
                 var body = JsonConvert.SerializeObject(request);
+                Log.Info(string.Format("[BetterYeah请求详情] Seller={0}, Buyer={1}, MsgList={2}, ProductIds={3}",
+                    sellerNick,
+                    buyerNick,
+                    JsonConvert.SerializeObject(request.msg_list),
+                    productIds.Count < 1 ? "<empty>" : string.Join(",", productIds)));
                 using (var httpRequest = new HttpRequestMessage(HttpMethod.Post, ApiUrl))
                 {
                     httpRequest.Headers.TryAddWithoutValidation("accept", "application/json");
@@ -112,6 +128,16 @@ namespace Bot.ChromeNs
                         : string.Join(Environment.NewLine, chatResponse.data.messages.Where(msg => !string.IsNullOrEmpty(msg)));
                     if (string.IsNullOrEmpty(answer))
                     {
+                        Log.Error(string.Format(
+                            "[BetterYeah空回复详情] Status={0}, Seller={1}, Buyer={2}, AssistantId={3}, HistoryCount={4}, ProductIds={5}, Response={6}, ParsedData={7}",
+                            response.StatusCode,
+                            sellerNick,
+                            buyerNick,
+                            assistantId,
+                            request.msg_list == null ? 0 : request.msg_list.Count,
+                            productIds.Count < 1 ? "<empty>" : string.Join(",", productIds),
+                            responseText,
+                            chatResponse.data == null ? "<null>" : JsonConvert.SerializeObject(chatResponse.data)));
                         Log.Error("BetterYeah接口未返回回复内容。");
                         return "错误：BetterYeah接口未返回回复内容";
                     }
@@ -141,10 +167,6 @@ namespace Bot.ChromeNs
             var ids = new List<string>();
             try
             {
-                if (qn.Buyer != null && !string.IsNullOrEmpty(qn.Buyer.TargetId))
-                {
-                    buyerTargetId = qn.Buyer.TargetId;
-                }
                 if (string.IsNullOrEmpty(buyerTargetId))
                 {
                     return ids;
@@ -187,6 +209,37 @@ namespace Bot.ChromeNs
             {
                 history.RemoveAt(0);
             }
+        }
+
+        private static bool TryGetMessageText(QNChatMessage message, out string text, out string source)
+        {
+            text = string.Empty;
+            source = string.Empty;
+            if (message == null)
+            {
+                return false;
+            }
+
+            if (message.originalData != null && !string.IsNullOrWhiteSpace(message.originalData.text))
+            {
+                text = message.originalData.text.Trim();
+                source = "originalData.text";
+                return true;
+            }
+            if (message.originalData != null && message.originalData.header != null
+                && !string.IsNullOrWhiteSpace(message.originalData.header.summary))
+            {
+                text = message.originalData.header.summary.Trim();
+                source = "originalData.header.summary";
+                return true;
+            }
+            if (!string.IsNullOrWhiteSpace(message.summary))
+            {
+                text = message.summary.Trim();
+                source = "summary";
+                return true;
+            }
+            return false;
         }
 
         private static long ParseTimestamp(string sendTime)

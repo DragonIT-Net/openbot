@@ -115,10 +115,16 @@ namespace Bot.AssistWindow.Widget.Robot
                     return;
                 }
 
+                Log.Info(string.Format("[买家队列] 用户点击“处理”，准备切换会话。Seller={0}, Buyer={1}",
+                    item.SellerNick,
+                    item.BuyerNick));
                 qn.OpenChat(item.BuyerNick);
 
                 if (!item.IsAutoReply && !string.IsNullOrEmpty(item.Answer))
                 {
+                    Log.Info(string.Format("[买家队列] 用户点击“处理”，准备填入AI答案。Seller={0}, Buyer={1}",
+                        item.SellerNick,
+                        item.BuyerNick));
                     await qn.PrepareTextAsync(item.BuyerNick, item.Answer);
                 }
             }

@@ -163,30 +163,74 @@ namespace Bot.AssistWindow.Widget.Robot
 
             stack.Children.Add(summaryGrid);
 
-            if (item.IsExpanded && item.PriorRounds.Count > 0)
-            {
-                var historyPanel = new StackPanel { Margin = new Thickness(8, 0, 8, 6) };
-                foreach (var round in item.PriorRounds)
-                {
-                    historyPanel.Children.Add(new TextBlock
-                    {
-                        Text = CombinePreview(round.Key, round.Value),
-                        FontSize = 11,
-                        Foreground = (Brush)FindResource("uiSubtleTextBrush"),
-                        TextWrapping = TextWrapping.Wrap,
-                        Margin = new Thickness(0, 0, 0, 4)
-                    });
-                }
-                stack.Children.Add(historyPanel);
-            }
-
             root.Child = stack;
             root.MouseLeftButtonUp += (s, e) =>
             {
-                item.IsExpanded = !item.IsExpanded;
-                Render();
+                ShowDetail(item);
             };
             return root;
+        }
+
+        private void ShowDetail(BuyerQueueItem item)
+        {
+            var content = new StackPanel { Margin = new Thickness(18) };
+            content.Children.Add(new TextBlock
+            {
+                Text = string.Format("买家：{0}", item.BuyerNick ?? string.Empty),
+                FontSize = 16,
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(0, 0, 0, 14)
+            });
+            AddRound(content, item.Question, item.Answer);
+
+            var detailWindow = new Window
+            {
+                Title = "问答详情",
+                Width = 520,
+                Height = 440,
+                MinWidth = 380,
+                MinHeight = 260,
+                Content = new ScrollViewer
+                {
+                    Content = content,
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+                },
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            var owner = Window.GetWindow(this);
+            if (owner != null)
+            {
+                detailWindow.Owner = owner;
+            }
+            detailWindow.Show();
+        }
+
+        private static void AddRound(Panel panel, string question, string answer)
+        {
+            var roundBorder = new Border
+            {
+                BorderBrush = Brushes.LightGray,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(10),
+                Margin = new Thickness(0, 0, 0, 8)
+            };
+            var roundPanel = new StackPanel();
+            roundPanel.Children.Add(new TextBlock
+            {
+                Text = string.Format("问：{0}", question ?? string.Empty),
+                TextWrapping = TextWrapping.Wrap,
+                FontWeight = FontWeights.SemiBold
+            });
+            roundPanel.Children.Add(new TextBlock
+            {
+                Text = string.Format("答：{0}", answer ?? string.Empty),
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 8, 0, 0),
+                Foreground = Brushes.DimGray
+            });
+            roundBorder.Child = roundPanel;
+            panel.Children.Add(roundBorder);
         }
 
         private static string CombinePreview(string question, string answer)

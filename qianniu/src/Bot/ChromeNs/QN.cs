@@ -163,7 +163,7 @@ namespace Bot.ChromeNs
             var ccode = message.cid == null ? string.Empty : message.cid.ccode;
             var clientId = message.mcode == null ? string.Empty : message.mcode.clientId;
             var messageId = message.mcode == null ? string.Empty : message.mcode.messageId;
-            var text = message.originalData == null ? message.summary : (message.originalData.text ?? message.summary);
+            var text = GetMessageText(message);
             return string.Format("{0}#{1}#{2}#{3}#{4}#{5}#{6}",
                 sellerNick ?? string.Empty,
                 buyerNick,
@@ -172,6 +172,24 @@ namespace Bot.ChromeNs
                 clientId,
                 message.sendTime ?? string.Empty,
                 text ?? string.Empty);
+        }
+
+        private static string GetMessageText(QNChatMessage message)
+        {
+            if (message == null)
+            {
+                return string.Empty;
+            }
+            if (message.originalData != null && !string.IsNullOrWhiteSpace(message.originalData.text))
+            {
+                return message.originalData.text.Trim();
+            }
+            if (message.originalData != null && message.originalData.header != null
+                && !string.IsNullOrWhiteSpace(message.originalData.header.summary))
+            {
+                return message.originalData.header.summary.Trim();
+            }
+            return message.summary ?? string.Empty;
         }
 
         private static bool TryMarkIncomingMessageProcessed(string sellerNick, QNChatMessage message)
@@ -294,6 +312,9 @@ namespace Bot.ChromeNs
         {
             try
             {
+                Log.Info(string.Format("[准备填入] 已请求向千牛填入文本。Buyer={0}, TextLength={1}",
+                    buyer ?? string.Empty,
+                    text == null ? 0 : text.Length));
                 if (rpa != null)
                 {
                     await rpa.PrepareTextAsync(buyer, text);
@@ -579,8 +600,8 @@ namespace Bot.ChromeNs
                 burstVersion.TryRemove(buyerKey, out _);
 
                 var combinedQuestion = burst == null || burst.Count < 1
-                    ? m.summary
-                    : string.Join(string.Empty, burst.Select(bm => bm == null ? string.Empty : bm.summary));
+                    ? GetMessageText(m)
+                    : string.Join(string.Empty, burst.Select(GetMessageText));
 
                 var isAutoReply = Params.Robot.GetIsAutoReply();
                 CachePendingAiReply(_seller.Nick, m.fromid.nick, answer);
@@ -600,7 +621,9 @@ namespace Bot.ChromeNs
                 }
                 else if (!isAutoReply && !string.IsNullOrEmpty(answer) && !answer.StartsWith("错误："))
                 {
-                    await PrepareTextAsync(m.fromid.nick, answer);
+                    Log.Info(string.Format("[后台买家消息] 自动回复已关闭，答案仅加入汇总面板，等待人工点击“处理”。Seller={0}, Buyer={1}",
+                        _seller.Nick,
+                        m.fromid.nick));
                 }
                 else if (isAutoReply && !string.IsNullOrEmpty(answer) && answer.StartsWith("错误："))
                 {
@@ -616,6 +639,11 @@ namespace Bot.ChromeNs
         private async void Cdp_EvShopRobotReceriveNewMessage(object sender, ShopRobotReceriveNewMessageEventArgs e)
         {
             DumpParsedEvent("onShopRobotReceriveNewMsgs", e.Seller, e.Buyer);
+            Log.Info(string.Format("[后台买家消息] 已收到后台会话消息。Seller={0}, Buyer={1}, Count={2}, AutoReply={3}",
+                e.Seller == null ? string.Empty : e.Seller.Nick,
+                e.Buyer == null ? string.Empty : e.Buyer.Nick,
+                e.Messages == null ? 0 : e.Messages.Count,
+                Params.Robot.GetIsAutoReply()));
             if (Params.Robot.GetIsAutoReply())
             {
                 //打开买家
