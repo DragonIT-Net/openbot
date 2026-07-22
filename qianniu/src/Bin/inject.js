@@ -92,13 +92,14 @@ if (typeof window.___setupWebSocket === 'undefined') {
   if (typeof(window.onInvokeNotifyDelegate) == 'undefined' || !window.___qnImageForwardV2) {
     imsdk.on(['im.singlemsg.onReceiveNewMsg'], cids => {
       cids.forEach(async cid=>{
-        let conv = getCacheConv(cid.ccode)
-        if(conv == undefined){
-          conv = await getRemoteMsg(cid.ccode)
-        }
+        // 不再用缓存命中与否来决定是否拉取，每次都拉一次最新消息内容，
+        // 否则聊过一次的买家之后永远走缓存分支，收不到消息内容（见 ADR 0004）。
+        let result = await getRemoteMsg(cid.ccode)
+        let conv = result.buyer || getCacheConv(cid.ccode) || { ccode: cid.ccode }
+        updateFromConversation(conv)
         window.chatWebsocket.send(JSON.stringify({
           type:'onShopRobotReceriveNewMsgs',
-          response:JSON.stringify({loginID:window._vs.loginID,conversation:conv})
+          response:JSON.stringify({loginID:window._vs.loginID,conversation:conv,msgs:result.msgs})
         }));
         console.log('onShopRobotReceriveNewMsgs,'+JSON.stringify(conv));
       })
@@ -129,15 +130,15 @@ async function getRemoteMsg(ccode){
                     msgid:'-1',
                     msgtime: '-1',
                   })
-  var buyer = { ccode }
-  var msgs = remoteMsg.result.msgs;
+  var msgs = (remoteMsg && remoteMsg.result && remoteMsg.result.msgs) || []
+  var buyer = undefined
   for(var idx = 0; idx < msgs.length; idx++){
     if(msgs[idx].loginid.nick != msgs[idx].fromid.nick){
       buyer = msgs[idx].fromid
       break
     }
   }
-  return buyer
+  return { buyer, msgs }
 }
 
 function getCacheConv(ccode) {

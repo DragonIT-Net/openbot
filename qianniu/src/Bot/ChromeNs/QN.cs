@@ -613,7 +613,7 @@ namespace Bot.ChromeNs
             }
         }
 
-        private void Cdp_EvShopRobotReceriveNewMessage(object sender, ShopRobotReceriveNewMessageEventArgs e)
+        private async void Cdp_EvShopRobotReceriveNewMessage(object sender, ShopRobotReceriveNewMessageEventArgs e)
         {
             DumpParsedEvent("onShopRobotReceriveNewMsgs", e.Seller, e.Buyer);
             if (Params.Robot.GetIsAutoReply())
@@ -625,6 +625,11 @@ namespace Bot.ChromeNs
             {
                 EvShopRobotReceriveNewMessage(this, e);
             }
+
+            // 非聚焦买家的新消息通知：inject.js 已经把最新消息内容一并拉回来了，
+            // 走跟 receiveNewMsg 完全相同的处理流水线（去重、进店提示过滤、消息合并），
+            // 这样不用切换聚焦也能处理，切换聚焦后重复收到同一条消息也会被去重挡掉。
+            await ProcessIncomingMessagesAsync(e.Messages);
         }
 
         private void Cdp_EvSellerSwitched(object sender, SellerSwitchedEventArgs e)
@@ -670,65 +675,94 @@ namespace Bot.ChromeNs
                     return;
                 }
                 var messages = chatRes.result;
-                try
-                {
-                    await PublishChatMessagesAsync(messages);
-                }
-                catch (Exception ex)
-                {
-                    Log.Exception(ex);
-                    Log.Error("聊天记录推送失败，已跳过本次推送；千牛消息监听和自动回复将继续执行。");
-                }
-                foreach (var m in messages)
-                {
-                    if (m == null || m.fromid == null || m.toid == null || _seller == null)
-                    {
-                        continue;
-                    }
-
-                    if (m.fromid.nick != _seller.Nick && m.toid.nick == _seller.Nick)
-                    {
-                        if (!TryMarkIncomingMessageProcessed(_seller.Nick, m))
-                        {
-                            Log.Info(string.Format("[消息去重] 跳过重复买家消息，Seller={0}, Buyer={1}, ClientId={2}, MessageId={3}, SendTime={4}, Text={5}",
-                                _seller.Nick,
-                                m.fromid.nick,
-                                m.mcode == null ? string.Empty : m.mcode.clientId,
-                                m.mcode == null ? string.Empty : m.mcode.messageId,
-                                m.sendTime,
-                                m.summary));
-                            continue;
-                        }
-
-                        if (!string.IsNullOrEmpty(m.fromid.targetId))
-                        {
-                            Log.Info(string.Format("[订单查询] 收到买家消息，尝试按买家查询订单。Buyer={0}, BuyerId={1}",
-                                m.fromid.nick,
-                                m.fromid.targetId));
-                            await GetBuyerTrades(m.fromid.targetId, string.Empty);
-                        }
-                        else
-                        {
-                            Log.Info(string.Format("[订单查询] 收到买家消息，但未携带买家ID。Buyer={0}", m.fromid.nick));
-                        }
-
-                        if (m.templateId == EntryIntoStoreTemplateId)
-                        {
-                            Log.Info(string.Format("[进店提示过滤] 跳过系统进店提示卡片，不计入AI对话历史。Buyer={0}, Summary={1}",
-                                m.fromid.nick,
-                                m.summary));
-                            continue;
-                        }
-
-                        await HandleBuyerMessageWithCoalescingAsync(m);
-                    }
-                }
+                await ProcessIncomingMessagesAsync(messages);
             }
             catch (Exception ex)
             {
                 Log.Exception(ex);
             }
 
+        }
+
+        /// <summary>
+        /// receiveNewMsg（聚焦买家）和 onShopRobotReceriveNewMsgs（全部买家，见 ADR 0004）两条通道
+        /// 共用的消息处理入口：先推送聊天记录，再逐条跑去重/进店提示过滤/消息合并。
+        /// </summary>
+        private async Task ProcessIncomingMessagesAsync(List<QNChatMessage> messages)
+        {
+            if (messages == null || messages.Count < 1)
+            {
+                return;
+            }
+
+            try
+            {
+                await PublishChatMessagesAsync(messages);
+            }
+            catch (Exception ex)
+            {
+                Log.Exception(ex);
+                Log.Error("聊天记录推送失败，已跳过本次推送；千牛消息监听和自动回复将继续执行。");
+            }
+
+            foreach (var m in messages)
+            {
+                try
+                {
+                    await ProcessIncomingBuyerMessageAsync(m);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception(ex);
+                }
+            }
+        }
+
+        private async Task ProcessIncomingBuyerMessageAsync(QNChatMessage m)
+        {
+            if (m == null || m.fromid == null || m.toid == null || _seller == null)
+            {
+                return;
+            }
+
+            if (m.fromid.nick == _seller.Nick || m.toid.nick != _seller.Nick)
+            {
+                return;
+            }
+
+            if (!TryMarkIncomingMessageProcessed(_seller.Nick, m))
+            {
+                Log.Info(string.Format("[消息去重] 跳过重复买家消息，Seller={0}, Buyer={1}, ClientId={2}, MessageId={3}, SendTime={4}, Text={5}",
+                    _seller.Nick,
+                    m.fromid.nick,
+                    m.mcode == null ? string.Empty : m.mcode.clientId,
+                    m.mcode == null ? string.Empty : m.mcode.messageId,
+                    m.sendTime,
+                    m.summary));
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(m.fromid.targetId))
+            {
+                Log.Info(string.Format("[订单查询] 收到买家消息，尝试按买家查询订单。Buyer={0}, BuyerId={1}",
+                    m.fromid.nick,
+                    m.fromid.targetId));
+                await GetBuyerTrades(m.fromid.targetId, string.Empty);
+            }
+            else
+            {
+                Log.Info(string.Format("[订单查询] 收到买家消息，但未携带买家ID。Buyer={0}", m.fromid.nick));
+            }
+
+            if (m.templateId == EntryIntoStoreTemplateId)
+            {
+                Log.Info(string.Format("[进店提示过滤] 跳过系统进店提示卡片，不计入AI对话历史。Buyer={0}, Summary={1}",
+                    m.fromid.nick,
+                    m.summary));
+                return;
+            }
+
+            await HandleBuyerMessageWithCoalescingAsync(m);
         }
 
 

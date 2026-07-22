@@ -108,15 +108,27 @@ namespace Bot.ChromeNs
                 });
             }
         }
+        private class ShopRobotMessagePayload
+        {
+            [JsonProperty("loginID")]
+            public LocalUser LoginID { get; set; }
+            [JsonProperty("conversation")]
+            public Conversation Conversation { get; set; }
+            [JsonProperty("msgs")]
+            public List<QNChatMessage> Msgs { get; set; }
+        }
+
         private void ShopRobotReceriveNewMessage(string response)
         {
-            var localUser = JsonConvert.DeserializeObject<ActiveLocalUser>(response);
+            var payload = JsonConvert.DeserializeObject<ShopRobotMessagePayload>(response);
+            if (payload == null) return;
             if (EvShopRobotReceriveNewMessage != null)
             {
                 EvShopRobotReceriveNewMessage(this, new ShopRobotReceriveNewMessageEventArgs
                 {
-                    Buyer = localUser.Conversation,
-                    Seller = localUser.LoginID
+                    Buyer = payload.Conversation,
+                    Seller = payload.LoginID,
+                    Messages = payload.Msgs
                 });
             }
         }

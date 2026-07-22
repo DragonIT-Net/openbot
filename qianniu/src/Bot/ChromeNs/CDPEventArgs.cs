@@ -1,4 +1,5 @@
-﻿using DbEntity;
+﻿using Bot.ChatRecord;
+using DbEntity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,6 +33,7 @@ namespace Bot.ChromeNs
     {
         public LocalUser Seller;
         public Conversation Buyer;
+        public List<QNChatMessage> Messages;
     }
 }
 
