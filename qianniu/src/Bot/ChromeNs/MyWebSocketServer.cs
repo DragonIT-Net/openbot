@@ -81,7 +81,7 @@ namespace Bot.ChromeNs
                                 wMsg.Response == null ? 0 : wMsg.Response.Length));
 
                             if (OnRecieveMessage != null)
-                                OnRecieveMessage(session, new WSocketNewMessageEventArgs(wMsg.Type, wMsg.Response));
+                                OnRecieveMessage(session, new WSocketNewMessageEventArgs(wMsg.Type, wMsg.Response, wMsg.Error));
                         }
                         catch (Exception ex)
                         {
@@ -167,17 +167,22 @@ namespace Bot.ChromeNs
 
         [JsonProperty("response")]
         public string Response { get; set; }
+
+        [JsonProperty("error")]
+        public string Error { get; set; }
     }
 
     public class WSocketNewMessageEventArgs : EventArgs
     {
         public string Type { get; private set; }
         public string Value { get; private set; }
+        public string Error { get; private set; }
 
-        public WSocketNewMessageEventArgs(string type, string value)
+        public WSocketNewMessageEventArgs(string type, string value, string error = null)
         {
             Type = type;
             Value = value;
+            Error = error;
         }
     }
 

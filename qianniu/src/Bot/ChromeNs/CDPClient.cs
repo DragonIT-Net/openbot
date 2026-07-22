@@ -23,6 +23,8 @@ namespace Bot.ChromeNs
 {
     public class CDPClient
     {
+        // 千牛页面执行请求的等待超时：超过这个时间还没收到响应就放弃，避免调用方永久卡死。见 Invoke/InvokeMTop。
+        private const int RequestTimeoutMilliseconds = 15000;
         public event EventHandler<BuyerSwitchedEventArgs> EvBuyerSwitched;
         public event EventHandler<SellerSwitchedEventArgs> EvSellerSwitched;
         public event EventHandler<MessageNotifyEventArgs> EvMessageNotity;
@@ -46,6 +48,25 @@ namespace Bot.ChromeNs
             if (session.SessionID == _webSocketSession.SessionID)
             {
                 var response = e.Value;
+
+                if (e.Type == "execute")
+                {
+                    // 页面执行报错时 response 会是空字符串——这也是一次有效的响应（表示"这次调用失败了"），
+                    // 必须照样走完配对逻辑唤醒等待方，否则调用方会永远卡住（见 Invoke/InvokeMTop 的超时说明）。
+                    if (!string.IsNullOrEmpty(e.Error))
+                    {
+                        Log.Error("[千牛页面执行报错] " + e.Error);
+                    }
+                    if (_requestWaitHandles.Count > 0)
+                    {
+                        _responses.Enqueue(response ?? string.Empty);
+                        ManualResetEventSlim requestMre;
+                        _requestWaitHandles.TryDequeue(out requestMre);
+                        requestMre.Set();
+                    }
+                    return;
+                }
+
                 if (string.IsNullOrEmpty(response)) return;
                 DumpStablePageEvent(e.Type, response);
                 if (e.Type == "receiveNewMsg")
@@ -67,16 +88,6 @@ namespace Bot.ChromeNs
                 else if (e.Type == "messageCenterNotify")
                 {
                     BenchMessageNotify(response);
-                }
-                else if (e.Type == "execute")
-                {
-                    if (_requestWaitHandles.Count > 0)
-                    {
-                        _responses.Enqueue(response);
-                        ManualResetEventSlim requestMre;
-                        _requestWaitHandles.TryDequeue(out requestMre);
-                        requestMre.Set();
-                    }
                 }
             }
         }
@@ -203,7 +214,11 @@ namespace Bot.ChromeNs
             _webSocketSession.Send(JsonConvert.SerializeObject(new { method = "execute", expression = cmd }));
             var response = string.Empty;
             await System.Threading.Tasks.Task.Run(() => {
-                requestResetEvent.Wait();
+                if (!requestResetEvent.Wait(RequestTimeoutMilliseconds))
+                {
+                    Log.Error(string.Format("[千牛页面调用超时] apiName={0}，等待响应超过{1}毫秒仍未收到，放弃本次调用。", apiName, RequestTimeoutMilliseconds));
+                    return;
+                }
                 _responses.TryDequeue(out response);
             });
             if (string.IsNullOrEmpty(response)) return default(T);
@@ -234,7 +249,11 @@ namespace Bot.ChromeNs
             _webSocketSession.Send(JsonConvert.SerializeObject(new { method = "execute", expression = cmd }));
             var response = string.Empty;
             await System.Threading.Tasks.Task.Run(() => {
-                requestResetEvent.Wait();
+                if (!requestResetEvent.Wait(RequestTimeoutMilliseconds))
+                {
+                    Log.Error(string.Format("[千牛页面调用超时] apiName={0}，等待响应超过{1}毫秒仍未收到，放弃本次调用。", apiName, RequestTimeoutMilliseconds));
+                    return;
+                }
                 _responses.TryDequeue(out response);
             });
             if (string.IsNullOrEmpty(response)) return default(T);

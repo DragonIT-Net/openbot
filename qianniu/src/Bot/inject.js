@@ -26,7 +26,10 @@ if (typeof window.___setupWebSocket === 'undefined') {
           const res = await eval(param.expression);
           socket.send(JSON.stringify({ type: 'execute', response: JSON.stringify(res) }));
         } catch (err) {
+          // 之前这里只在控制台打个错误就完事了，C# 那边永远收不到响应会一直卡着等（见 CDPClient.Invoke）。
+          // 必须无论成功失败都发一条响应回去，哪怕内容是空的。
           console.error('Eval error:', err);
+          socket.send(JSON.stringify({ type: 'execute', response: '', error: (err && err.message) ? err.message : String(err) }));
         }
       }
     };
