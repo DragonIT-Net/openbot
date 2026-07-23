@@ -21,7 +21,7 @@ namespace Bot
 {
     public class Params
     {
-        public const int Version = 10003;
+        public const int Version = 10005;
         public static string VersionStr;
         public const string CreateDateStr = "2023.08.18";
         public static string HelpRoot;

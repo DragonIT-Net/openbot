@@ -4,7 +4,7 @@
 ; AppVersion 是全项目唯一手动维护的版本号，发布新版本只改这一行——
 ; 编译 Bot.csproj 时会自动同步换算到 AssemblyInfo.cs 和 StartUp/Params.cs（见 tools/SyncVersion.ps1）。
 #define AppName "智能客服助手"
-#define AppVersion "1.0.3"
+#define AppVersion "1.0.5"
 #define AppPublisher ""
 #define AppExeName "Bot.exe"
 

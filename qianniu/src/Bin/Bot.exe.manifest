@@ -4,7 +4,7 @@
   <description asmv2:iconFile="Asset\branding\qianNiu-bot.ico" xmlns="urn:schemas-microsoft-com:asm.v1" />
   <application />
   <entryPoint>
-    <assemblyIdentity name="Bot" version="1.0.2.0" language="neutral" processorArchitecture="amd64" />
+    <assemblyIdentity name="Bot" version="1.0.3.0" language="neutral" processorArchitecture="amd64" />
     <commandLine file="Bot.exe" parameters="" />
   </entryPoint>
   <trustInfo>
@@ -56,13 +56,13 @@
   </dependency>
   <dependency>
     <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="Bot.exe" size="2075048">
-      <assemblyIdentity name="Bot" version="1.0.2.0" language="neutral" processorArchitecture="amd64" />
+      <assemblyIdentity name="Bot" version="1.0.3.0" language="neutral" processorArchitecture="amd64" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>leBTtiwnNeuIRHbQBLzSvMt8nlN/c9WHYnpDprRpk/U=</dsig:DigestValue>
+        <dsig:DigestValue>M9moSuusgNoBVV6ipnMLped4wnp2AG7m1kDyRqNikww=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -74,7 +74,7 @@
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>DN3a/WHxsWqWBLz3QGluAgN8vKoo1LCiHD5aGWrFCvs=</dsig:DigestValue>
+        <dsig:DigestValue>sM6hPuvDcpYizk0MvjBlcXzuyah1u8ukqDA6x25Yl3w=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -86,7 +86,7 @@
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>n+YZ3PQlnoerRQ4VTsAJ5DxjbmxHtBQZgtNKH0HHM4E=</dsig:DigestValue>
+        <dsig:DigestValue>u6iqPYYm7/TIodK/MZhCcEQQ9vBFM1mn8lcNJxjuuvw=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
